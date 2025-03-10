@@ -1,0 +1,102 @@
+{
+  "general": {
+    "name": "John",
+    "surname": "Doe",
+    "email": "johndoe@example.com",
+    "phone": "+1 234 567 890",
+    "jobTitle": "Full Stack Developer",
+    "country": "United States",
+    "city": "New York",
+    "driving": "B"
+  },
+  "socialLinks": {
+    "linkedin": "johndoe",
+    "github": "johndoe",
+    "website": "johndoe.com"
+  },
+  "image": null,
+  "summary": "Full Stack Developer with over 5 years of experience in developing and maintaining web applications. Proficient in JavaScript, React, Node.js, and database technologies.",
+  "experience": [
+    {
+      "company": "Tech Solutions Inc.",
+      "position": "Senior Developer",
+      "startDate": "2020-01-01",
+      "endDate": null,
+      "description": "Leading a team of 5 developers working on enterprise applications. Implementing new features and maintaining existing codebase."
+    },
+    {
+      "company": "Web Experts",
+      "position": "Web Developer",
+      "startDate": "2018-01-01",
+      "endDate": "2019-12-31",
+      "description": "Developed and maintained multiple client websites using React, Node.js, and MySQL."
+    }
+  ],
+  "education": [
+    {
+      "institution": "University of Technology",
+      "degree": "Bachelor of Computer Science",
+      "startDate": "2014-09-01",
+      "endDate": "2018-06-30",
+      "description": "Graduated with honors. Specialization in software development."
+    }
+  ],
+  "skills": [
+    "JavaScript",
+    "React",
+    "Node.js",
+    "TypeScript",
+    "MongoDB",
+    "SQL",
+    "Git",
+    "Docker"
+  ],
+  "languages": [
+    {
+      "language": "English",
+      "level": "native"
+    },
+    {
+      "language": "Spanish",
+      "level": "pro"
+    }
+  ],
+  "projects": [
+    {
+      "name": "E-commerce Platform",
+      "description": "Built a full-featured e-commerce platform with React, Node.js, and MongoDB.",
+      "link": "github.com/johndoe/ecommerce"
+    },
+    {
+      "name": "Task Management App",
+      "description": "Developed a task management application with real-time updates using Socket.io.",
+      "link": "github.com/johndoe/taskapp"
+    }
+  ],
+  "certificates": [
+    {
+      "name": "AWS Certified Developer",
+      "issuer": "Amazon Web Services",
+      "date": "2022-05-15"
+    },
+    {
+      "name": "React Advanced Concepts",
+      "issuer": "Frontend Masters",
+      "date": "2021-03-10"
+    }
+  ],
+  "interests": [
+    "Open Source Development",
+    "Web Accessibility",
+    "UI/UX Design",
+    "Tech Blogging"
+  ],
+  "references": [
+    {
+      "name": "Jane Smith",
+      "position": "CTO at Tech Solutions",
+      "email": "jane.smith@techsolutions.com",
+      "phone": "+1 234 567 891"
+    }
+  ]
+}
