@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Toaster } from "react-hot-toast";
 import Hero from "./components/layout/Hero";
 import BuildPage from "./components/build/BuildPage";
+import SignUp from "./components/auth/SignUp";
 import Social from "./components/build/Social";
 import Skills from "./components/build/Skills";
 import "./App.css";
@@ -32,7 +33,7 @@ function App() {
               <li>
                 <button 
                   className={`px-4 py-2 ${currentPage === "build" ? "text-main font-medium" : "text-gray-600"}`}
-                  onClick={() => handleNavigate("build")}
+                  onClick={() => handleNavigate("signup")}
                   data-section="build"
                 >
                   Build
@@ -49,6 +50,8 @@ function App() {
             <Hero />
           </div>
         )}
+        
+        {currentPage === "signup" && <SignUp onNavigate={handleNavigate} />}
         
         {currentPage === "build" && <BuildPage />}
       </main>

@@ -1,19 +1,41 @@
-import React, { useState } from "react";
-import { FiPlus, FiX, FiArrowUp, FiArrowDown } from "react-icons/fi";
+import { useState, useCallback, useEffect } from "react";
 import useStore from "../../store/store.jsx";
-import { handleMoveItem } from "../../utils/helpers.jsx";
+import { FaPlus, FaCheck, FaTimes, FaArrowUp, FaArrowDown } from "react-icons/fa";
+import Input from "../../components/common/Input";
+import Button from "../../components/common/Button";
+import Example from "../../components/shared/Example";
 
 const Skills = () => {
-	const { store, addItem, removeItem, updateOrder } = useStore();
-	const { skills } = store;
+	const {
+		store: { skills },
+		addItem,
+		editItem,
+		removeItem,
+		updateOrder,
+	} = useStore();
 
 	const [newSkill, setNewSkill] = useState("");
+	const [editedIndex, setEditedIndex] = useState(null);
 
-	const handleAddSkill = (e) => {
-		e.preventDefault();
-		if (!newSkill.trim()) return;
+	const handleAddSkill = () => {
+		if (newSkill.trim() !== "") {
+			if (editedIndex === null) {
+				addItem("skills", newSkill);
+			} else {
+				editItem("skills", editedIndex, newSkill);
+				setEditedIndex(null);
+			}
+			setNewSkill("");
+		}
+	};
 
-		addItem("skills", newSkill.trim());
+	const handleEditSkill = (index) => {
+		setEditedIndex(index);
+		setNewSkill(skills[index]);
+	};
+
+	const handleCloseEdit = () => {
+		setEditedIndex(null);
 		setNewSkill("");
 	};
 
@@ -21,86 +43,89 @@ const Skills = () => {
 		removeItem("skills", index);
 	};
 
-	const moveSkill = (index, direction) => {
-		handleMoveItem(skills, updateOrder, index, direction, "skills");
+	// Move item up in the list
+	const moveUp = (index) => {
+		if (index > 0) {
+			const newOrder = [...skills];
+			const temp = newOrder[index];
+			newOrder[index] = newOrder[index - 1];
+			newOrder[index - 1] = temp;
+			updateOrder("skills", newOrder);
+		}
 	};
 
+	// Move item down in the list
+	const moveDown = (index) => {
+		if (index < skills.length - 1) {
+			const newOrder = [...skills];
+			const temp = newOrder[index];
+			newOrder[index] = newOrder[index + 1];
+			newOrder[index + 1] = temp;
+			updateOrder("skills", newOrder);
+		}
+	};
+	// These functions are now replaced by moveUp and moveDown above
+
+	//* Shortcuts
+	const handleKeyPress = useCallback(
+		(event) => {
+			if (event.key === "Enter" && newSkill.trim() !== "") {
+				handleAddSkill();
+			}
+		},
+		[newSkill]
+	);
+
+	useEffect(() => {
+		document.addEventListener("keydown", handleKeyPress);
+		return () => {
+			document.removeEventListener("keydown", handleKeyPress);
+		};
+	}, [handleKeyPress]);
+
 	return (
-		<div className="w-full max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-200">
-			<h2 className="text-2xl font-semibold mb-6">Skills</h2>
-
-			<form onSubmit={handleAddSkill} className="mb-6">
-				<div className="flex items-center gap-2">
-					<input
-						type="text"
-						value={newSkill}
-						onChange={(e) => setNewSkill(e.target.value)}
-						placeholder="Add a skill (e.g. JavaScript, Project Management)"
-						className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent"
-					/>
-					<button
-						type="submit"
-						className="p-2 bg-main text-white rounded-md hover:bg-opacity-90 transition-all"
-					>
-						<FiPlus className="text-xl" />
-					</button>
-				</div>
-			</form>
-
-			{skills.length > 0 ? (
-				<div className="space-y-2">
-					<h3 className="font-medium">Your Skills ({skills.length})</h3>
-					<ul className="space-y-2">
-						{skills.map((skill, index) => (
-							<li
-								key={index}
-								className="flex items-center justify-between gap-2 p-3 bg-gray-50 rounded-md border border-gray-100"
-							>
-								<span className="flex-1">{skill}</span>
-								<div className="flex items-center gap-1">
-									<button
-										onClick={() => moveSkill(index, "up")}
-										disabled={index === 0}
-										className={`p-1 rounded-md ${
-											index === 0 ? "text-gray-300" : "hover:bg-gray-200"
-										}`}
-									>
-										<FiArrowUp />
-									</button>
-									<button
-										onClick={() => moveSkill(index, "down")}
-										disabled={index === skills.length - 1}
-										className={`p-1 rounded-md ${
-											index === skills.length - 1
-												? "text-gray-300"
-												: "hover:bg-gray-200"
-										}`}
-									>
-										<FiArrowDown />
-									</button>
-									<button
-										onClick={() => handleRemoveSkill(index)}
-										className="p-1 text-red-500 hover:bg-red-50 rounded-md"
-									>
-										<FiX />
-									</button>
-								</div>
-							</li>
-						))}
-					</ul>
-				</div>
-			) : (
-				<p className="text-gray-500 text-center py-4">No skills added yet.</p>
-			)}
-
-			<div className="mt-4 text-gray-600 text-sm">
-				<p>Tips:</p>
-				<ul className="list-disc ml-5 space-y-1">
-					<li>Include both technical and soft skills</li>
-					<li>Be specific about technologies you know</li>
-					<li>List your skills in order of proficiency</li>
-				</ul>
+		<div className="my-14 lg:my-20 px-10 flex flex-col gap-2">
+			<h1 className="text-center font-bold text-3xl text-main mb-4">
+				Skills
+			</h1>
+			<div className="flex justify-between gap-2 mb-4">
+				<Input
+					state={newSkill}
+					setState={setNewSkill}
+					name={"skill"}
+					label={editedIndex === null ? "Add skill" : "Edit skill"}
+				/>
+				<Button onClick={handleAddSkill}>
+					{editedIndex === null ? <FaPlus /> : <FaCheck />}
+				</Button>
+				{editedIndex !== null && (
+					<Button onClick={handleCloseEdit} variant="danger">
+						<FaTimes />
+					</Button>
+				)}
 			</div>
+
+			<div className="max-h-64 overflow-auto snap-y">
+				{skills.length > 0 && (
+					<div className="space-y-4 text-white/80">
+						{skills.map((skill, index) => (
+							<Example
+								key={index}
+								index={index}
+								up={moveUp}
+								down={moveDown}
+								remove={handleRemoveSkill}
+								edit={handleEditSkill}
+								title={skill}
+								state={skills}
+								cursor={false}
+							></Example>
+						))}
+					</div>
+				)}
+			</div>
+
+			<Stepper prev={`/build?step=4`} next={"/build?step=6"} />
 		</div>
 	);
 };

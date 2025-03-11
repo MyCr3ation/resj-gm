@@ -8,6 +8,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'next/dynamic': path.resolve(__dirname, './src/lib/next-mock/dynamic.jsx'),
+      'next-intl': path.resolve(__dirname, './src/lib/next-mock/next-intl.jsx'),
+      'next/link': path.resolve(__dirname, './src/lib/next-mock/link.jsx'),
     },
   },
 })

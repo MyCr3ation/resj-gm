@@ -3,6 +3,14 @@ import Personal from "./Personal";
 import Social from "./Social";
 import Summary from "./Summary";
 import Skills from "./Skills";
+import Experience from "./Experience";
+import Education from "./Education";
+import Projects from "./Projects";
+import Certificates from "./Certificates";
+import Interests from "./Interests";
+import References from "./References";
+import Languages from "./Languages";
+// import Additional from "./Additional";
 import useStore from "../../store/store.jsx";
 import { toast } from "react-hot-toast";
 
@@ -68,11 +76,16 @@ const BuildPage = () => {
 					{activeSection === "social" && <Social />}
 					{activeSection === "summary" && <Summary />}
 					{activeSection === "skills" && <Skills />}
+					{activeSection === "experience" && <Experience />}
+					{activeSection === "education" && <Education />}
+					{activeSection === "projects" && <Projects />}
+					{activeSection === "languages" && <Languages />}
+					{activeSection === "certificates" && <Certificates />}
+					{activeSection === "interests" && <Interests />}
+					{activeSection === "references" && <References />}
 
 					{/* Placeholder for sections not yet implemented */}
-					{!["personal", "social", "summary", "skills"].includes(
-						activeSection
-					) && (
+					{!["personal", "summary"].includes(activeSection) && (
 						<div className="w-full max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-200">
 							<h2 className="text-2xl font-semibold mb-6">
 								{sections.find((s) => s.id === activeSection)?.label}

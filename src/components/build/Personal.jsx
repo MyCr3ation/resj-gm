@@ -1,133 +1,95 @@
-import React, { useState } from "react";
+
+import React from "react";
+import ImageUpload from "../../components/shared/ImageUpload";
+import Input from "../../components/common/Input";
 import useStore from "../../store/store.jsx";
-import { cn } from "../../utils/helpers.jsx";
+// Editor component will be imported directly in Vite
+import Editor from "../../components/shared/Editor";
 
 const Personal = () => {
 	const { store, setStore } = useStore();
-	const { name, surname, email, phone, jobTitle, country, city, driving } =
-		store.general;
 
-	const handleChange = (e) => {
-		const { name, value } = e.target;
-		setStore(`general.${name}`, value);
-	};
+	// No longer using translations
 
 	return (
-		<div className="w-full max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-200">
-			<h2 className="text-2xl font-semibold mb-6">Personal Information</h2>
-
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-				<div>
-					<label className="block text-sm font-medium text-gray-700 mb-1">
-						First Name
-					</label>
-					<input
-						type="text"
-						name="name"
-						value={name}
-						onChange={handleChange}
-						placeholder="Your first name"
-						className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent"
-					/>
-				</div>
-
-				<div>
-					<label className="block text-sm font-medium text-gray-700 mb-1">
-						Last Name
-					</label>
-					<input
-						type="text"
-						name="surname"
-						value={surname}
-						onChange={handleChange}
-						placeholder="Your last name"
-						className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent"
-					/>
-				</div>
-
-				<div>
-					<label className="block text-sm font-medium text-gray-700 mb-1">
-						Email
-					</label>
-					<input
-						type="email"
-						name="email"
-						value={email}
-						onChange={handleChange}
-						placeholder="your.email@example.com"
-						className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent"
-					/>
-				</div>
-
-				<div>
-					<label className="block text-sm font-medium text-gray-700 mb-1">
-						Phone
-					</label>
-					<input
-						type="text"
-						name="phone"
-						value={phone}
-						onChange={handleChange}
-						placeholder="Phone number"
-						className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent"
-					/>
-				</div>
-
-				<div>
-					<label className="block text-sm font-medium text-gray-700 mb-1">
-						Job Title
-					</label>
-					<input
-						type="text"
-						name="jobTitle"
-						value={jobTitle}
-						onChange={handleChange}
-						placeholder="e.g. Frontend Developer"
-						className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent"
-					/>
-				</div>
-
-				<div>
-					<label className="block text-sm font-medium text-gray-700 mb-1">
-						Country
-					</label>
-					<input
-						type="text"
-						name="country"
-						value={country}
-						onChange={handleChange}
-						placeholder="Country"
-						className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent"
-					/>
-				</div>
-
-				<div>
-					<label className="block text-sm font-medium text-gray-700 mb-1">
-						City
-					</label>
-					<input
-						type="text"
-						name="city"
-						value={city}
-						onChange={handleChange}
-						placeholder="City"
-						className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent"
-					/>
-				</div>
-
-				<div>
-					<label className="block text-sm font-medium text-gray-700 mb-1">
-						Driving License
-					</label>
-					<input
-						type="text"
-						name="driving"
-						value={driving}
-						onChange={handleChange}
-						placeholder="e.g. B"
-						className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent"
-					/>
-				</div>
+		<div className="my-14 lg:my-20 px-10 flex flex-col gap-2">
+			<h1 className="text-center font-bold text-3xl text-main mb-4">
+				Personal Information
+			</h1>
+			<div className="flex items-center justify-center">
+				<ImageUpload />
+			</div>
+			<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+				<Input
+					state={store.general.name}
+					setState={(value) => setStore("general.name", value)}
+					name={"name"}
+					label="Name"
+				/>
+				<Input
+					state={store.general.surname}
+					setState={(value) => setStore("general.surname", value)}
+					name={"surname"}
+					label="Surname"
+				/>
+				<Input
+					state={store.general.email}
+					setState={(value) => setStore("general.email", value)}
+					name={"mail"}
+					label="Email"
+				/>
+				<Input
+					state={store.general.phone}
+					setState={(value) => setStore("general.phone", value)}
+					name={"phone"}
+					label="Phone"
+				/>
+				<Input
+					state={store.general.jobTitle}
+					setState={(value) => setStore("general.jobTitle", value)}
+					name={"jobtitle"}
+					label="Job Title"
+				/>
+				<Input
+					state={store.general.driving}
+					setState={(value) => setStore("general.driving", value)}
+					name={"drivingLicense"}
+					label="Driving License"
+				/>
+				<Input
+					state={store.general.country}
+					setState={(value) => setStore("general.country", value)}
+					name={"country"}
+					label="Country"
+				/>
+				<Input
+					state={store.general.city}
+					setState={(value) => setStore("general.city", value)}
+					name={"city"}
+					label="City"
+				/>
+			</div>
+			<div className="mt-2">
+				<Editor
+					state={store.summary}
+					setState={(value) => setStore("summary", value)}
+					name={"summary"}
+					label="About"
+				/>
+			</div>
+			<div className="flex justify-between mt-6">
+				<button 
+					className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+					onClick={() => document.querySelector('button[data-section="home"]').click()}
+				>
+					Home
+				</button>
+				<button 
+					className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+					onClick={() => document.querySelector('button[data-section="social"]').click()}
+				>
+					Next
+				</button>
 			</div>
 		</div>
 	);
