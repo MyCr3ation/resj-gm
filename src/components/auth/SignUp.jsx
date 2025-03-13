@@ -9,11 +9,12 @@ import {
 	Form,
 	Button,
 	InputGroup,
-	Alert,
-} from "react-bootstrap"; // Import Bootstrap components
-import "bootstrap/dist/css/bootstrap.min.css"; // Import Bootstrap CSS
+	Alert, // Import Bootstrap components
+} from "react-bootstrap";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 function SignUp() {
+	// ... (rest of your component code remains the same) ...
 	const navigate = useNavigate();
 	const [formData, setFormData] = useState({
 		name: "",
@@ -123,14 +124,14 @@ function SignUp() {
 					<Col md={6}>
 						<div className="d-flex justify-content-center mb-4">
 							<Button
-								variant={isLogin ? "primary" : "outline-primary"}
+								variant={isLogin ? "success" : "outline-success"} // Changed to success
 								onClick={() => setIsLogin(true)}
 								className="me-2"
 							>
 								Login
 							</Button>
 							<Button
-								variant={!isLogin ? "primary" : "outline-primary"}
+								variant={!isLogin ? "success" : "outline-success"} // Changed to success
 								onClick={() => setIsLogin(false)}
 							>
 								Sign Up
@@ -170,7 +171,7 @@ function SignUp() {
 									</Form.Control.Feedback>
 								</Form.Group>
 
-								<Button variant="primary" type="submit" className="w-100">
+								<Button variant="success" type="submit" className="w-100">
 									Login
 								</Button>
 							</Form>
@@ -240,7 +241,7 @@ function SignUp() {
 									</Form.Control.Feedback>
 								</Form.Group>
 
-								<Button variant="primary" type="submit" className="w-100">
+								<Button variant="success" type="submit" className="w-100">
 									Sign Up
 								</Button>
 							</Form>
@@ -253,10 +254,41 @@ function SignUp() {
 }
 
 const StyledWrapper = styled.div`
-	// You can keep your existing styles or adapt them to work with Bootstrap
-	// For example, you might want to remove some styles that conflict with Bootstrap's defaults
-	background-color: #f8f9fa; // Example of a subtle background color
-	padding: 20px 0; // Add padding around the container
+	background-color: #f8f9fa;
+	padding: 20px 0;
+
+	/* Bootstrap Overrides - Change Blue to Green */
+	.btn-primary {
+		background-color: #28a745; /* Bootstrap's success color */
+		border-color: #28a745;
+
+		&:hover {
+			background-color: #218838; /* Darker green on hover */
+			border-color: #1e7e34;
+		}
+	}
+	/* For outline buttons */
+	.btn-outline-primary {
+		color: #28a745;
+		border-color: #28a745;
+		&:hover {
+			background-color: #28a745;
+			border-color: #28a745;
+			color: white;
+		}
+	}
+	/* For form feedback (validation) */
+	.is-invalid {
+		border-color: #dc3545; /* Keep Bootstrap's danger color for errors */
+	}
+	.invalid-feedback {
+		color: #dc3545;
+	}
+	/* For form controls when focused */
+	.form-control:focus {
+		border-color: #28a745; /* Green border on focus */
+		box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25); /* Green glow */
+	}
 `;
 
 export default SignUp;
