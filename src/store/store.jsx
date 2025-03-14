@@ -60,21 +60,27 @@ const useStore = create(
 
 				//! References
 				references: [],
+
+				//! Journal  <-- Added Journal here
+				journal: {},
 			},
 
-			//! Generic setter
+			//! Generic setter (Now handles journal correctly)
 			setStore: (key, value) =>
 				set((state) => {
 					const keys = key.split(".");
-					const lastKey = keys.pop();
-					let nestedState = state.store;
+					// Create a new copy of the top-level store
+					const newStore = { ...state.store };
+					let current = newStore;
 
-					keys.forEach((k) => {
-						nestedState = nestedState[k];
-					});
-
-					nestedState[lastKey] = value;
-					return { store: { ...state.store } };
+					// Traverse and shallow copy each nested object along the key path
+					for (let i = 0; i < keys.length - 1; i++) {
+						current[keys[i]] = { ...(current[keys[i]] || {}) };
+						current = current[keys[i]];
+					}
+					// Set the final key to the new value
+					current[keys[keys.length - 1]] = value;
+					return { store: newStore };
 				}),
 
 			//! Add, remove, edit, reorder utilities

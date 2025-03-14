@@ -259,8 +259,8 @@ const StyledWrapper = styled.div`
 
 	/* Bootstrap Overrides - Change Blue to Green */
 	.btn-primary {
-		background-color: #28a745; /* Bootstrap's success color */
-		border-color: #28a745;
+		background-color: #356851; /* Bootstrap's success color */
+		border-color: #356851;
 
 		&:hover {
 			background-color: #218838; /* Darker green on hover */
@@ -269,11 +269,11 @@ const StyledWrapper = styled.div`
 	}
 	/* For outline buttons */
 	.btn-outline-primary {
-		color: #28a745;
-		border-color: #28a745;
+		color: #356851;
+		border-color: #356851;
 		&:hover {
-			background-color: #28a745;
-			border-color: #28a745;
+			background-color: #356851;
+			border-color: #356851;
 			color: white;
 		}
 	}
@@ -286,7 +286,7 @@ const StyledWrapper = styled.div`
 	}
 	/* For form controls when focused */
 	.form-control:focus {
-		border-color: #28a745; /* Green border on focus */
+		border-color: #356851; /* Green border on focus */
 		box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25); /* Green glow */
 	}
 `;
