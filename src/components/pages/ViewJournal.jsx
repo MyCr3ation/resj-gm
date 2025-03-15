@@ -86,18 +86,18 @@ const ViewJournal = () => {
 							<div className="p-3 h-full flex flex-col justify-between">
 								{/* Top row: Title on left and Mood on right */}
 								<div className="flex justify-between items-center">
-									<h2 className="text-lg font-semibold text-white">
+									<h2 className="text-lg font-semibold text-black">
 										{entry.title}
 									</h2>
 									<span className="text-2xl">{entry.mood}</span>
 								</div>
 								{/* Body preview */}
-								<p className="text-sm text-white line-clamp-2 mt-2">
+								<p className="text-sm text-black line-clamp-2 mt-2">
 									{entry.body}
 								</p>
 								{/* Bottom row: Date on the right */}
 								<div className="flex justify-end">
-									<p className="text-xs text-white">
+									<p className="text-xs text-black">
 										{new Date(entry.date).toLocaleDateString("en-US", {
 											weekday: "short",
 											year: "numeric",

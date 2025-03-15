@@ -29,14 +29,14 @@ const ImageCrop = ({ open, image, onCropDone, onCropCancel }) => {
 				<Button
 					type="button"
 					onClick={() => onCropCancel()}
-					className={`aspect-square text-white bg-red-400 border-red-400 hover:bg-red-400/70`}
+					className={`aspect-square text-black bg-red-400 border-red-400 hover:bg-red-400/70`}
 				>
 					<MdCancel size={24} />
 				</Button>
 				<Button
 					type="button"
 					onClick={() => onCropDone(croppedArea)}
-					className={`aspect-square text-white bg-brand border-brand hover:bg-brand/70`}
+					className={`aspect-square text-black bg-brand border-brand hover:bg-brand/70`}
 				>
 					<IoCheckmarkDoneCircleSharp size={24} />
 				</Button>

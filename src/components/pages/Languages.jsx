@@ -24,8 +24,6 @@ const Languages = () => {
 		updateOrder,
 	} = useStore();
 
-	const [show, setShow] = useState(false);
-
 	const [newLanguage, setNewLanguage] = useState({
 		language: "",
 		level: "",
@@ -94,79 +92,71 @@ const Languages = () => {
 	// const locale = useLocale(); // Using hardcoded locale from above
 
 	return (
-		<div className="flex flex-col gap-2 border-b border-dashed border-gray-400">
-			<h2
-				className="font-bold text-xl text-brand hover:text-brand/80 animation-all mb-4 cursor-pointer flex items-center gap-1"
-				onClick={() => setShow(!show)}
-			>
-				{t("title")}
-				<MdPlayArrow
-					size={18}
-					className={`mt-1 animation-all ${show ? "rotate-90" : ""}`}
-				/>
+		<div className="w-full max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+			<h2 className="text-center font-bold text-3xl text-brand mb-4">
+				Languages
 			</h2>
 
-			{show && (
-				<>
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-						<Input
-							state={newLanguage.language}
-							setState={(value) =>
-								setNewLanguage({ ...newLanguage, language: value })
-							}
-							name="language"
-							label={t("language") + "*"}
-						/>
-						<Select
-							options={LANGUAGE_OPTIONS}
-							state={newLanguage.level}
-							setState={(value) =>
-								setNewLanguage({ ...newLanguage, level: value })
-							}
-							name="level"
-							label={t("level") + "*"}
-						/>
-					</div>
-
-					<Button
-						onClick={() =>
-							editedIndex === null ? handleAddLanguage() : handleEditLanguage()
+			<>
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+					<Input
+						state={newLanguage.language}
+						setState={(value) =>
+							setNewLanguage({ ...newLanguage, language: value })
 						}
-					>
-						{t(editedIndex !== null ? "edit" : "add")}
-					</Button>
-					{editedIndex !== null && (
-						<Button onClick={() => handleCloseEdit()}>{t("close")}</Button>
-					)}
+						name="language"
+						label={t("Language") + "*"}
+					/>
+					<Select
+						options={LANGUAGE_OPTIONS}
+						state={newLanguage.level}
+						setState={(value) =>
+							setNewLanguage({ ...newLanguage, level: value })
+						}
+						name="level"
+						label={t("Level") + "*"}
+					/>
+				</div>
 
-					{/* List */}
-					<div className="my-6">
-						{languages.length > 0 && (
-							<div className="space-y-4 text-white/80">
-								{languages.map((lang, index) => (
-									<Example
-										key={index}
-										index={index}
-										remove={handleRemoveLanguage}
-										edit={handleChooseLanguage}
-										down={handleMoveLanguageDown}
-										up={handleMoveLanguageUp}
-										title={lang.language}
-										state={languages}
-									>
-										<p className="flex items-center gap-1">
-											<strong className="text-brand">
-												<TbProgress />
-											</strong>{" "}
-											{t(lang.level)}
-										</p>
-									</Example>
-								))}
-							</div>
-						)}
-					</div>
-				</>
-			)}
+				<Button
+					className="mt-2"
+					onClick={() =>
+						editedIndex === null ? handleAddLanguage() : handleEditLanguage()
+					}
+				>
+					{t(editedIndex !== null ? "edit" : "add")}
+				</Button>
+				{editedIndex !== null && (
+					<Button onClick={() => handleCloseEdit()}>{t("close")}</Button>
+				)}
+
+				{/* List */}
+				<div className="my-6">
+					{languages.length > 0 && (
+						<div className="space-y-4 text-black/80">
+							{languages.map((lang, index) => (
+								<Example
+									key={index}
+									index={index}
+									remove={handleRemoveLanguage}
+									edit={handleChooseLanguage}
+									down={handleMoveLanguageDown}
+									up={handleMoveLanguageUp}
+									title={lang.language}
+									state={languages}
+								>
+									<p className="flex items-center gap-1">
+										<strong className="text-brand">
+											<TbProgress />
+										</strong>{" "}
+										{t(lang.level)}
+									</p>
+								</Example>
+							))}
+						</div>
+					)}
+				</div>
+			</>
 		</div>
 	);
 };

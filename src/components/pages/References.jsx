@@ -19,8 +19,6 @@ const References = () => {
 		updateOrder,
 	} = useStore();
 
-	const [show, setShow] = useState(false);
-
 	const [newReference, setNewReference] = useState({
 		name: "",
 		company: "",
@@ -98,102 +96,93 @@ const References = () => {
 	};
 
 	return (
-		<div className="flex flex-col gap-2 border-b border-dashed border-gray-400">
-			<h2
-				className="font-bold text-xl text-brand hover:text-brand/80 animation-all mb-4 cursor-pointer flex items-center gap-1"
-				onClick={() => setShow(!show)}
-			>
-				{t("title")}
-				<MdPlayArrow
-					size={18}
-					className={`mt-1 animation-all ${show ? "rotate-90" : ""}`}
-				/>
+		<div className="w-full max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+			<h2 className="text-center font-bold text-3xl text-brand mb-4">
+				References
 			</h2>
-			{show && (
-				<>
-					{/* Inputs */}
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-						<Input
-							state={newReference.name}
-							setState={(value) =>
-								setNewReference({ ...newReference, name: value })
-							}
-							name={"name"}
-							label={t("name") + "*"}
-						/>
-						<Input
-							state={newReference.company}
-							setState={(value) =>
-								setNewReference({ ...newReference, company: value })
-							}
-							name={"company"}
-							label={t("company") + "*"}
-						/>
-						<Input
-							state={newReference.phone}
-							setState={(value) =>
-								setNewReference({ ...newReference, phone: value })
-							}
-							name={"phone"}
-							label={t("phone")}
-						/>
-						<Input
-							state={newReference.email}
-							setState={(value) =>
-								setNewReference({ ...newReference, email: value })
-							}
-							name={"email"}
-							label={t("email")}
-						/>
-					</div>
 
-					<Button
-						onClick={() =>
-							editedIndex === null
-								? handleAddReference()
-								: handleEditReference()
+			<>
+				{/* Inputs */}
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+					<Input
+						state={newReference.name}
+						setState={(value) =>
+							setNewReference({ ...newReference, name: value })
 						}
-					>
-						{t(editedIndex !== null ? "edit" : "add")}
-					</Button>
-					{editedIndex !== null && (
-						<Button onClick={() => handleCloseEdit()}>{t("close")}</Button>
-					)}
+						name={"name"}
+						label={t("Name") + "*"}
+					/>
+					<Input
+						state={newReference.company}
+						setState={(value) =>
+							setNewReference({ ...newReference, company: value })
+						}
+						name={"company"}
+						label={t("Company") + "*"}
+					/>
+					<Input
+						state={newReference.phone}
+						setState={(value) =>
+							setNewReference({ ...newReference, phone: value })
+						}
+						name={"phone"}
+						label={t("Phone")}
+					/>
+					<Input
+						state={newReference.email}
+						setState={(value) =>
+							setNewReference({ ...newReference, email: value })
+						}
+						name={"email"}
+						label={t("Email")}
+					/>
+				</div>
 
-					{/* List */}
-					<div className="my-6">
-						{references.length > 0 && (
-							<div className="space-y-4 text-white/80">
-								{references.map((ref, index) => (
-									<Example
-										key={index}
-										index={index}
-										remove={handleRemoveReference}
-										edit={handleChooseReference}
-										down={handleMoveReferenceDown}
-										up={handleMoveReferenceUp}
-										title={ref.name + " - " + ref.company}
-										state={references}
-									>
-										<p className="flex items-center gap-1">
-											<strong className="text-brand">
-												<MdPhone />
-											</strong>{" "}
-											{ref.phone}
-										</p>
-										<p className="flex items-center gap-1">
-											<strong className="text-brand">
-												<MdEmail />
-											</strong>{" "}
-											{ref.email}
-										</p>
-									</Example>
-								))}
-							</div>
-						)}
-					</div>
-				</>
-			)}
+				<Button
+					className="mt-2"
+					onClick={() =>
+						editedIndex === null ? handleAddReference() : handleEditReference()
+					}
+				>
+					{t(editedIndex !== null ? "Edit" : "Add")}
+				</Button>
+				{editedIndex !== null && (
+					<Button onClick={() => handleCloseEdit()}>{t("Close")}</Button>
+				)}
+
+				{/* List */}
+				<div className="my-6">
+					{references.length > 0 && (
+						<div className="space-y-4 text-black/80">
+							{references.map((ref, index) => (
+								<Example
+									key={index}
+									index={index}
+									remove={handleRemoveReference}
+									edit={handleChooseReference}
+									down={handleMoveReferenceDown}
+									up={handleMoveReferenceUp}
+									title={ref.name + " - " + ref.company}
+									state={references}
+								>
+									<p className="flex items-center gap-1">
+										<strong className="text-brand">
+											<MdPhone />
+										</strong>{" "}
+										{ref.phone}
+									</p>
+									<p className="flex items-center gap-1">
+										<strong className="text-brand">
+											<MdEmail />
+										</strong>{" "}
+										{ref.email}
+									</p>
+								</Example>
+							))}
+						</div>
+					)}
+				</div>
+			</>
 		</div>
 	);
 };

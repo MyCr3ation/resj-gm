@@ -1,75 +1,35 @@
-import { useQuill } from "react-quilljs";
-import "quill/dist/quill.snow.css";
-import { useEffect, useState, useRef } from "react";
+import React from "react";
 
-export default function Editor({ state, setState, editedIndex, label }) {
-  const [editorFocused, setEditorFocused] = useState(false);
-  const isInitialLoad = useRef(true);
-  const theme = "snow";
-
-  const modules = {
-    toolbar: [
-      ["bold", "italic", "underline", "strike"],
-      [{ list: "ordered" }, { list: "bullet" }],
-      ["link"],
-    ],
-  };
-
-  const placeholder = "";
-
-  const formats = ["bold", "italic", "underline", "strike", "list", "link"];
-
-  const { quillRef, quill } = useQuill({
-    theme,
-    modules,
-    formats,
-    placeholder,
-  });
-
-  useEffect(() => {
-    if (quill && isInitialLoad.current && state) {
-      quill.clipboard.dangerouslyPasteHTML(state);
-      isInitialLoad.current = false;
-    }
-  }, [quill, state]);
-
-  useEffect(() => {
-    if (quill && editedIndex !== null) {
-      quill.clipboard.dangerouslyPasteHTML(state);
-    }
-  }, [editedIndex]);
-
-  useEffect(() => {
-    if (quill) {
-      quill.on("text-change", () => {
-        setState(quill.root.innerHTML.trim());
-      });
-
-      quill.on("selection-change", (range) => {
-        setEditorFocused(!!range);
-      });
-    }
-  }, [quill, setState]);
-
-  useEffect(() => {
-    if (quill && !state) {
-      quill.root.innerHTML = "";
-    }
-  }, [quill, state]);
-
-  return (
-    <div className="relative border-gray-600 focus:outline-none focus:ring-0 focus:border-main border rounded-md !font-[inherit]">
-      <div
-        className={`absolute text-sm text-gray-400 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] px-2 ${
-          (state || editorFocused) && "bg-gray-900 text-main"
-        } peer-focus:bg-gray-900 peer-focus:text-main  peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-2 peer-placeholder-shown:top-1/2 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1 select-none`}
-      >
-        {label}
-      </div>
-      <div
-        ref={quillRef}
-        className="block w-full text-sm bg-transparent rounded-md border-1 appearance-none text-white"
-      />
-    </div>
-  );
+export default function Editor({
+	state,
+	setState,
+	value,
+	onChange,
+	label,
+	placeholder,
+}) {
+	return (
+		<div className="relative">
+			{label && (
+				<label
+					title={state}
+					className={`absolute flex items-center gap-1 text-sm text-gray duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] peer-focus:bg-white px-2 peer-focus:px-2 peer-focus:text-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1 select-none ${
+						(state !== "" || state?.length > 0) && "bg-white text-green-800"
+					}`}
+				>
+					{label}
+				</label>
+			)}
+			<textarea
+				id="editor-textarea"
+				value={value || ""}
+				onChange={(e) => onChange(e.target.value)}
+				rows={8}
+				className="w-full px-4 py-3 border-2 border-gray-100 rounded-lg
+                   focus:outline-none focus:ring-2 focus:ring-brandGreen-200
+                   focus:border-brandGreen-300 transition-colors"
+				placeholder={placeholder}
+			/>
+		</div>
+	);
 }

@@ -11,6 +11,7 @@ import {
 	InputGroup,
 	Alert, // Import Bootstrap components
 } from "react-bootstrap";
+import { GoogleSignInButton } from "./GoogleSignInButton";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 function SignUp() {
@@ -174,6 +175,21 @@ function SignUp() {
 								<Button variant="success" type="submit" className="w-100">
 									Login
 								</Button>
+								<div className="text-center mb-3">
+									<span>Or</span>
+								</div>
+								<GoogleSignInButton
+									onSuccess={(tokenResponse) => {
+										// Handle successful Google sign-in
+										console.log(tokenResponse);
+										toast.success("Successfully signed in with Google!");
+										navigate("/resume");
+									}}
+									onError={(error) => {
+										console.error("Google sign-in error:", error);
+										toast.error("Failed to sign in with Google");
+									}}
+								/>
 							</Form>
 						) : (
 							<Form onSubmit={(e) => handleSubmit(e, "signup")}>
@@ -241,9 +257,24 @@ function SignUp() {
 									</Form.Control.Feedback>
 								</Form.Group>
 
-								<Button variant="success" type="submit" className="w-100">
+								<Button variant="success" type="submit" className="w-100 mb-3">
 									Sign Up
 								</Button>
+								<div className="text-center mb-3">
+									<span>Or</span>
+								</div>
+								<GoogleSignInButton
+									onSuccess={(tokenResponse) => {
+										// Handle successful Google sign-in
+										console.log(tokenResponse);
+										toast.success("Successfully signed in with Google!");
+										navigate("/resume");
+									}}
+									onError={(error) => {
+										console.error("Google sign-in error:", error);
+										toast.error("Failed to sign in with Google");
+									}}
+								/>
 							</Form>
 						)}
 					</Col>

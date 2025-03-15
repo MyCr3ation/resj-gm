@@ -18,7 +18,7 @@ const StarOnGithub = ({ label }) => {
 			href="https://github.com"
 			target="_blank"
 			rel="noopener noreferrer"
-			className="flex items-center gap-2 px-4 py-2 rounded-md font-medium text-white hover:bg-gray-700 hover:bg-gray-600 transition duration-300"
+			className="flex items-center gap-2 px-4 py-2 rounded-md font-medium text-black hover:bg-gray-700 hover:bg-gray-600 transition duration-300"
 		>
 			<SiGithub size={20} />
 			<span>{label}</span>

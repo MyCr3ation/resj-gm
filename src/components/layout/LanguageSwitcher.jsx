@@ -43,7 +43,7 @@ export default function LanguageSwitcher() {
 							key={localeItem.value}
 							href={localeItem.value}
 							onClick={() => handleHtmlLang(localeItem.value)}
-							className="py-2 px-4 rounded-xl bg-gray-200/25 text-white hover:bg-gray-200 hover:text-black flex items-center gap-2 animation-all h-10"
+							className="py-2 px-4 rounded-xl bg-gray-200/25 text-black hover:bg-gray-200 hover:text-black flex items-center gap-2 animation-all h-10"
 						>
 							<Flag
 								code={findLocale(localeItem.value)}

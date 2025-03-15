@@ -21,7 +21,7 @@ const Select = ({
 				id={name}
 				className={cn(
 					`block px-4 py-2 w-full text-sm bg-transparent rounded-md border-1 appearance-none border-gray-600 dark:focus:border-brand focus:outline-none focus:ring-0 focus:border-brand peer border disabled:opacity-50 h-10 ${
-						state !== "" ? "text-white" : "text-gray-400"
+						state !== "" ? "text-black" : "text-gray-400"
 					}`,
 					className__select
 				)}
@@ -36,7 +36,7 @@ const Select = ({
 						value={option.value ? option.value : option}
 						className={cn("text-black", className__option)}
 					>
-						{t(`Languages.${option.value ? option.value : option}`)}
+						{t(`${option.value ? option.value : option}`)}
 					</option>
 				))}
 			</select>

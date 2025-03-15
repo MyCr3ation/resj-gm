@@ -13,7 +13,7 @@ const Select = ({ label, state, setState, options, className }) => {
 			value={state}
 			onChange={(e) => setState(e.target.value)}
 			className={cn(
-				"bg-transparent text-white/80 outline-none border-0 cursor-pointer animation-all appearance-none",
+				"bg-transparent text-black/80 outline-none border-0 cursor-pointer animation-all appearance-none",
 				className
 			)}
 		>
@@ -22,7 +22,7 @@ const Select = ({ label, state, setState, options, className }) => {
 					key={index}
 					value={e.value}
 					hidden={state === e.value}
-					className={"bg-zinc-900 text-white"}
+					className={"bg-zinc-900 text-black"}
 				>
 					{e.label}
 				</option>

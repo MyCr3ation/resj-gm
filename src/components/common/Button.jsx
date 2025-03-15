@@ -20,13 +20,13 @@ const Button = ({
 			)}
 		>
 			{animation && (
-				<span className="transform -translate-x-5 animation-all group-hover:translate-x-0 opacity-0 group-hover:opacity-100 group-hover:text-white ">
+				<span className="transform -translate-x-5 animation-all group-hover:translate-x-0 opacity-0 group-hover:opacity-100 group-hover:text-black ">
 					<MdArrowRightAlt size={24} />
 				</span>
 			)}
 			<div
 				className={cn(
-					`uppercase text-xs sm:text-sm animation-all group-hover:text-white select-none`,
+					`uppercase text-xs sm:text-sm animation-all group-hover:text-black select-none`,
 					className__children
 				)}
 			>

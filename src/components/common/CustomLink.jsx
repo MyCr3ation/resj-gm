@@ -29,7 +29,7 @@ const CustomLink = ({
 			{animation && (
 				<span
 					className={cn(
-						`transform animation-all group-hover:opacity-100 group-hover:text-white`,
+						`transform animation-all group-hover:opacity-100 group-hover:text-black`,
 						className__animation
 					)}
 				>
@@ -38,7 +38,7 @@ const CustomLink = ({
 			)}
 			<div
 				className={cn(
-					`uppercase text-sm animation-all group-hover:text-white`,
+					`uppercase text-sm animation-all group-hover:text-black`,
 					className__children
 				)}
 			>

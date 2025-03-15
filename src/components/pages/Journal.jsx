@@ -97,7 +97,7 @@ const WeatherWidget = ({ userLocation }) => {
 					<button
 						type="button"
 						onClick={toggleUnit}
-						className="px-4 py-1 mt-2 bg-brand text-white rounded hover:bg-brandGreen-600 transition-colors"
+						className="px-4 py-1 mt-2 bg-brand text-black rounded hover:bg-brandGreen-600 transition-colors"
 					>
 						Convert to {unit === "F" ? "°C" : "°F"}
 					</button>
@@ -447,7 +447,7 @@ const Journal = () => {
 				<button
 					type="button"
 					onClick={handleSubmit}
-					className="px-6 py-2 bg-brandGreen-600 text-white rounded-md hover:bg-brandGreen-700 focus:outline-none focus:ring-2 focus:ring-brandGreen-500 focus:ring-opacity-50 transition-colors"
+					className="px-6 py-2 bg-brandGreen-600 text-black rounded-md hover:bg-brandGreen-700 focus:outline-none focus:ring-2 focus:ring-brandGreen-500 focus:ring-opacity-50 transition-colors"
 				>
 					Save Entry
 				</button>

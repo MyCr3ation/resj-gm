@@ -17,7 +17,7 @@ const Additional = () => {
 			<Interests />
 			<References />
 			<Languages />
-			<Stepper prev={`/build?step=6`} />
+			{/* <Stepper prev={`/build?step=6`} /> */}
 		</div>
 	);
 };

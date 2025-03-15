@@ -20,9 +20,9 @@ const Example = ({
 	return (
 		<details
 			key={index}
-			className="bg-zinc-700/10 border-2 border-zinc-600 text-white hover:bg-zinc-700/20 px-4 py-2 rounded-md animation-all mt-2 text-sm group"
+			className="bg-zinc-700/10 border-2 border-zinc-600 text-black hover:bg-zinc-700/20 px-4 py-2 rounded-md animation-all mt-2 text-sm group"
 		>
-			<summary className="font-bold text-white/80 flex flex-col-reverse xs:flex-row items-center justify-between cursor-pointer text-base">
+			<summary className="font-bold text-black/80 flex flex-col-reverse xs:flex-row items-center justify-between cursor-pointer text-base">
 				<span className="flex items-center gap-1 w-full">
 					<span className="text-sm max-w-full truncate">{title}</span>{" "}
 					{cursor && (
@@ -58,7 +58,7 @@ const Example = ({
 							onClick={() => edit(index)}
 							className="menu-item w-full font-normal text-blue-400 text-xs xs:text-sm"
 						>
-							{t("edit")}
+							{t("Edit")}
 							<FaEdit />
 						</button>
 						<button
@@ -66,7 +66,7 @@ const Example = ({
 							onClick={() => remove(index)}
 							className="menu-item w-full font-normal text-red-400 text-xs xs:text-sm"
 						>
-							{t("remove")}
+							{t("Remove")}
 							<FaTrash />
 						</button>
 					</Menu>

@@ -103,7 +103,7 @@ const ImageUpload = () => {
 					<button
 						onClick={() => deleteImage()}
 						type="button"
-						className="absolute top-0 right-0 bg-red-400 text-white rounded-full p-1"
+						className="absolute top-0 right-0 bg-red-400 text-black rounded-full p-1"
 					>
 						<MdDelete />
 					</button>
