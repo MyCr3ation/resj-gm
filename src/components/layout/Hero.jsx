@@ -27,7 +27,7 @@ const Hero = () => {
 							window.location.hash = "/signup";
 						}
 					}}
-					className="flex items-center justify-center gap-2 w-full sm:w-fit px-6 py-3 bg-brand text-black rounded-lg font-medium no-underline hover:bg-opacity-90 transition-all"
+					className="flex items-center justify-center gap-2 w-full sm:w-fit px-6 py-3 bg-brand text-white rounded-lg font-medium no-underline hover:bg-opacity-90 transition-all"
 				>
 					Start with ResJ <FaArrowRight />
 				</a>

@@ -3,13 +3,31 @@
 @tailwind utilities;
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+	font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+	line-height: 1.5;
+	font-weight: 400;
 }
 
 body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
+	margin: 0;
+	min-width: 320px;
+	min-height: 100vh;
+}
+
+/* Add this to your global CSS file (e.g., index.css or styles.css) */
+/* or within a <style jsx> tag in your component if you use that */
+
+@keyframes shimmer {
+	0% {
+		background-position: -700px 0;
+	}
+	100% {
+		background-position: 700px 0;
+	}
+}
+
+.animate-shimmer {
+	background: linear-gradient(to right, #e2e2e2 8%, #f0f0f0 18%, #e2e2e2 33%);
+	background-size: 1000px 100%;
+	animation: shimmer 1.5s infinite linear;
 }

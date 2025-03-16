@@ -11,17 +11,24 @@ import BuildPage from "./components/pages/BuildPage";
 import SignUp from "./components/auth/SignUp";
 import Journal from "./components/pages/Journal";
 import Logo from "../src/resj-logo-color.svg";
-import { FaAngleDown } from "react-icons/fa6";
+import { FaAngleDown, FaBars, FaTimes } from "react-icons/fa"; // Import icons from react-icons/fa
 import ViewJournal from "./components/pages/ViewJournal";
+import FullJournalView from "./components/pages/FullJournalView";
+import { useState } from "react";
 
 function App() {
 	const currentYear = new Date().getFullYear();
+	const [isMenuOpen, setIsMenuOpen] = useState(false); // State for mobile menu
+
+	const toggleMenu = () => {
+		setIsMenuOpen(!isMenuOpen);
+	};
 
 	return (
 		<Router key="router">
 			<div className="w-screen h-screen overflow-x-hidden bg-white text-gray-900 flex flex-col">
-				<header className="bg-white border-b border-gray-100 py-4 w-full">
-					<div className="px-4 flex justify-between items-center ">
+				<header className="bg-white border-b border-gray-100  w-full">
+					<div className="px-4 flex justify-between items-center">
 						<Link
 							to="/"
 							className="flex items-center font-bold text-brand bg-brand"
@@ -32,28 +39,49 @@ function App() {
 								className="h-10 w-auto"
 							/>
 						</Link>
-						<nav>
-							<ul className="flex space-x-4">
+
+						{/* Mobile Menu Button */}
+						<button
+							className="md:hidden text-brand focus:outline-none"
+							onClick={toggleMenu}
+						>
+							{isMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+						</button>
+
+						{/* Navigation (hidden on small screens, shown on medium and up) */}
+						<nav
+							className={`${
+								isMenuOpen ? "block" : "hidden"
+							} md:block absolute md:static top-full left-0 bg-white md:bg-transparent z-50 md:z-auto shadow-md md:shadow-none`}
+						>
+							<ul className="flex flex-col md:flex-row md:space-x-4 p-4 md:p-0">
 								<li>
 									<NavLink
 										to="/"
 										className={({ isActive }) =>
-											`px-4 py-2 hover:text-brand no-underline item-center ${
+											`px-4 py-2 hover:text-brand no-underline item-center block ${
 												isActive ? "text-brand font-semibold" : ""
 											}`
 										}
 										data-section="home"
+										onClick={toggleMenu}
 										end // This ensures that only the exact "/" path is active
 									>
 										Home
 									</NavLink>
 								</li>
-								<li className="relative group">
+								<li className="relative group pb-2">
 									<NavLink
 										to="/journal"
-										onClick={(e) => e.preventDefault()} // Prevent Journal from being clickable
+										onClick={(e) => {
+											e.preventDefault(); // Prevent Journal from being clickable
+											if (window.innerWidth < 768) {
+												// Check if it's mobile.  768px = md breakpoint
+												toggleMenu(); // Close the menu if it's open
+											}
+										}}
 										className={({ isActive }) =>
-											`px-4 py-2 hover:text-brand no-underline item-center ${
+											`px-4 py-2 hover:text-brand no-underline item-center block ${
 												isActive ? "text-brand font-semibold" : ""
 											}`
 										}
@@ -62,7 +90,7 @@ function App() {
 										Journal
 										<FaAngleDown className="inline ml-1" />
 									</NavLink>
-									<div className="absolute left-0 right-0 mx-auto mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block transition-opacity duration-300 delay-150">
+									<div className="absolute left-0 right-0 mx-auto mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block transition-opacity duration-1000 delay-150 md:group-hover:block">
 										<div className="py-1">
 											<NavLink
 												to="/journal/view"
@@ -71,6 +99,7 @@ function App() {
 														isActive ? "bg-gray-100" : ""
 													}`
 												}
+												onClick={toggleMenu}
 											>
 												View Journal
 											</NavLink>
@@ -81,6 +110,7 @@ function App() {
 														isActive ? "bg-gray-100" : ""
 													}`
 												}
+												onClick={toggleMenu}
 											>
 												New Entry
 											</NavLink>
@@ -89,61 +119,18 @@ function App() {
 								</li>
 								<li>
 									<NavLink
-										to="/signup"
+										to="/resume"
 										className={({ isActive }) =>
-											`px-2 py-2 hover:text-brand no-underline item-center ${
+											`px-2 py-2 hover:text-brand no-underline item-center block ${
 												isActive ? "text-brand font-semibold" : ""
 											}`
 										}
 										data-section="resume"
+										onClick={toggleMenu}
 									>
 										Resume
 									</NavLink>
 								</li>
-
-								{/* <li className="relative group">
-									<NavLink className="px-4 py-2 hover:text-brand flex items-center no-underline">
-										Journal
-										<svg
-											className="w-3 h-3 ml-1"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 20 20"
-											xmlns="http://www.w3.org/2000/svg"
-										>
-											<path
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												strokeWidth="2"
-												d="M19 9l-7 7-7-7"
-											/>
-										</svg>
-									</NavLink>
-									<div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block">
-										<div className="py-1">
-											<NavLink
-												to="/journal"
-												className={({ isActive }) =>
-													`block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline ${
-														isActive ? "bg-gray-100" : ""
-													}`
-												}
-											>
-												View Journal
-											</NavLink>
-											<NavLink
-												to="/journal/new"
-												className={({ isActive }) =>
-													`block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline ${
-														isActive ? "bg-gray-100" : ""
-													}`
-												}
-											>
-												New Entry
-											</NavLink>
-										</div>
-									</div>
-								</li> */}
 							</ul>
 						</nav>
 					</div>
@@ -163,6 +150,7 @@ function App() {
 						<Route path="/resume" element={<BuildPage />} />
 						<Route path="/journal/new" element={<Journal />} />
 						<Route path="/journal/view" element={<ViewJournal />} />
+						<Route path="/journal/view/:id" element={<FullJournalView />} />
 					</Routes>
 				</main>
 

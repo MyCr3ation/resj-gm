@@ -110,7 +110,7 @@ const Skills = () => {
 				)}
 			</div>
 
-			<div className="max-h-100 overflow-auto snap-y">
+			<div className="my-6">
 				{skills.length > 0 && (
 					<div className="space-y-4 text-black/80">
 						{skills.map((skill, index) => (

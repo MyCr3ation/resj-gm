@@ -124,6 +124,8 @@ const Project = () => {
 		handleMoveItem(projects, updateOrder, index, "down", "projects");
 	};
 
+	const [text, setText] = useState("");
+
 	return (
 		<div className="w-full max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-200">
 			<h1 className="text-center font-bold text-3xl text-brand mb-4">
@@ -189,14 +191,7 @@ const Project = () => {
 			</div>
 
 			<div className="mt-2">
-				<Editor
-					editedIndex={editedIndex}
-					state={newProject.description}
-					setState={(value) =>
-						setNewProject({ ...newProject, description: value })
-					}
-					label={t("Description")}
-				/>
+				<Editor value={text} onChange={setText} label="Description" />
 			</div>
 			<Button
 				onClick={() =>

@@ -14,7 +14,7 @@ import {
 import { GoogleSignInButton } from "./GoogleSignInButton";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-function SignUp() {
+function Credentials() {
 	// ... (rest of your component code remains the same) ...
 	const navigate = useNavigate();
 	const [formData, setFormData] = useState({
@@ -322,4 +322,4 @@ const StyledWrapper = styled.div`
 	}
 `;
 
-export default SignUp;
+export default Credentials;

@@ -10,9 +10,9 @@ import Certificates from "./Certificates";
 import Interests from "./Interests";
 import References from "./References";
 import Languages from "./Languages";
-// import Additional from "./Additional";
 import useStore from "../../store/store.jsx";
 import { toast } from "react-hot-toast";
+import { TiTick } from "react-icons/ti";
 
 const BuildPage = () => {
 	const [activeSection, setActiveSection] = useState("personal");
@@ -50,13 +50,14 @@ const BuildPage = () => {
 						{sections.map((section) => (
 							<button
 								key={section.id}
-								className={`text-left px-3 py-2 rounded-md transition-colors ${
+								className={`text-left px-3 py-2 rounded-md transition-colors flex ${
 									activeSection === section.id
 										? "bg-brand text-white"
 										: "hover:bg-gray-100"
 								}`}
 								onClick={() => setActiveSection(section.id)}
 							>
+								<TiTick className="text-brand mr-1" size={20} />
 								{section.label}
 							</button>
 						))}

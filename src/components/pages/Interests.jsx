@@ -96,7 +96,7 @@ const Interests = () => {
 					)}
 				</div>
 
-				<div className="max-h-56 overflow-auto snap-y mb-6">
+				<div className="my-6">
 					{interests.length > 0 && (
 						<div className="space-y-4 text-black/80">
 							{interests.map((interests, index) => (

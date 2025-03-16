@@ -100,6 +100,7 @@ const Certificates = () => {
 		handleMoveItem(certificates, updateOrder, index, "down", "certificates");
 	};
 
+	const [text, setText] = useState("");
 	//* ISO
 	// Since useLocale is commented out in imports, we'll use a fallback
 	const locale = "en"; // Default to English
@@ -133,14 +134,7 @@ const Certificates = () => {
 					/>
 				</div>
 				<div className="mt-2">
-					<Editor
-						editedIndex={editedIndex}
-						state={newCertificate.description}
-						setState={(value) =>
-							setNewCertificate({ ...newCertificate, description: value })
-						}
-						label={t("Description")}
-					/>
+					<Editor value={text} onChange={setText} label="Description" />
 				</div>
 				<Button
 					onClick={() =>
