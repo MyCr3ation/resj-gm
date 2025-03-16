@@ -1,15 +1,22 @@
-//ViewJournal.jsx
+// ViewJournal.jsx
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom"; // Import Link
+import { Link } from "react-router-dom";
+import { AiOutlineSearch } from "react-icons/ai";
 
 const ViewJournal = () => {
-	const [isLoading, setIsLoading] = useState(true); // Start with loading true
-	const [journalEntries, setJournalEntries] = useState([]); // Start with empty array
+	const [isLoading, setIsLoading] = useState(true);
+	const [journalEntries, setJournalEntries] = useState([]);
+
+	// Filter states
+	const [startDate, setStartDate] = useState("");
+	const [endDate, setEndDate] = useState("");
+	const [selectedMood, setSelectedMood] = useState("");
+	const [onlyWithGoal, setOnlyWithGoal] = useState(false);
+	const [searchTerm, setSearchTerm] = useState("");
 
 	useEffect(() => {
 		const timer = setTimeout(() => {
 			const sampleJournalData = [
-				// Moved sample data inside the useEffect
 				{
 					id: 1,
 					date: "2024-07-28",
@@ -17,6 +24,7 @@ const ViewJournal = () => {
 					title: "A Wonderful Day",
 					image: "resj-logo.png",
 					body: "Today was a fantastic day! I went to the park, had a picnic, and enjoyed the beautiful weather. I also learned a lot about React development, which was exciting.",
+					goal: "Finish React project",
 				},
 				{
 					id: 2,
@@ -25,6 +33,7 @@ const ViewJournal = () => {
 					title: "A Bit Gloomy",
 					image: "resj-logo.png",
 					body: "Felt a bit down today. The weather was cloudy, and I didn't get much done. But I watched a good movie, which helped.",
+					// no goal
 				},
 				{
 					id: 3,
@@ -33,6 +42,7 @@ const ViewJournal = () => {
 					title: "Productive Day!",
 					image: "resj-logo.png",
 					body: "Got so much work done today! Finished a major project milestone and felt very accomplished. Celebrated with a nice dinner.",
+					goal: "Gym session in the morning",
 				},
 				{
 					id: 4,
@@ -41,6 +51,7 @@ const ViewJournal = () => {
 					title: "Another Great Day!",
 					image: "resj-logo.png",
 					body: "This is a test entry to see how multiple cards look.",
+					// no goal
 				},
 				{
 					id: 5,
@@ -49,6 +60,7 @@ const ViewJournal = () => {
 					title: "Learning More React",
 					image: "resj-logo.png",
 					body: "Spent the day diving deeper into React hooks and state management.",
+					// no goal
 				},
 				{
 					id: 6,
@@ -56,31 +68,56 @@ const ViewJournal = () => {
 					mood: "😠",
 					title: "Frustrating Bug",
 					image: "resj-logo.png",
-					body: "Encountered a tricky bug in my code.  Took a while to debug, but I learned from it!",
+					body: "Encountered a tricky bug in my code. Took a while to debug, but I learned from it!",
+					goal: "Finally fix that bug",
 				},
-			].sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by date (newest first)
+			].sort((a, b) => new Date(b.date) - new Date(a.date));
 
 			setJournalEntries(sampleJournalData);
 			setIsLoading(false);
 		}, 2000);
-		return () => clearTimeout(timer); // Cleanup on unmount
+
+		return () => clearTimeout(timer);
 	}, []);
 
+	// Filter logic
+	const filteredEntries = journalEntries.filter((entry) => {
+		// Date range: if startDate/endDate provided, check entry's date
+		if (startDate && new Date(entry.date) < new Date(startDate)) {
+			return false;
+		}
+		if (endDate && new Date(entry.date) > new Date(endDate)) {
+			return false;
+		}
+
+		// Mood filter
+		if (selectedMood && entry.mood !== selectedMood) {
+			return false;
+		}
+
+		// Only with goal
+		if (onlyWithGoal && !entry.goal) {
+			return false;
+		}
+
+		// Search filter (case-insensitive in title/body)
+		const lowerSearch = searchTerm.toLowerCase();
+		const inTitle = entry.title.toLowerCase().includes(lowerSearch);
+		const inBody = entry.body.toLowerCase().includes(lowerSearch);
+		if (searchTerm && !inTitle && !inBody) {
+			return false;
+		}
+
+		return true;
+	});
+
 	const handleCardClick = (entryId) => {
-		// Pass entryId
-		// In a real app, this click handler would *not* trigger a general page load.
-		// Instead, it would likely do nothing here, and the <Link> would handle navigation.
-		// The FullJournalView component would handle loading the specific entry.
-		// setIsLoading(true);  // Don't setIsLoading here.  Let the FullJournalView component handle loading.
-		// Simulate fetching specific entry (this is *not* how you'd do it in a real app)
-		// setTimeout(() => {
-		// 	setIsLoading(false);
-		// }, 1000);
+		// In a real app, you'd navigate or handle logic for the clicked entry
 	};
 
 	const LoadingCard = () => (
 		<div
-			className="relative bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 block animate-shimmer"
+			className="relative bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 block animate-pulse"
 			style={{ aspectRatio: "9/16" }}
 		>
 			<div className="absolute inset-0 w-full h-full bg-gray-300"></div>
@@ -90,7 +127,7 @@ const ViewJournal = () => {
 					top: "65%",
 					bottom: "0",
 					background:
-						"linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.3))", // Lighter gradient
+						"linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.3))",
 				}}
 			>
 				<div className="p-3 h-full flex flex-col justify-between">
@@ -100,7 +137,6 @@ const ViewJournal = () => {
 					</div>
 					<div className="h-4 w-full bg-gray-200 rounded-md mt-2"></div>
 					<div className="h-4 w-full bg-gray-200 rounded-md mt-2"></div>
-
 					<div className="flex justify-end mt-auto">
 						<div className="h-3 w-1/4 bg-gray-200 rounded-md"></div>
 					</div>
@@ -116,7 +152,6 @@ const ViewJournal = () => {
 					All Journal Entries
 				</h1>
 				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-					{/* Render at least 5 loading cards */}
 					{[...Array(5)].map((_, index) => (
 						<LoadingCard key={index} />
 					))}
@@ -127,21 +162,93 @@ const ViewJournal = () => {
 
 	return (
 		<div className="w-full max-w-7xl mx-auto px-4 py-8">
-			{" "}
-			{/* Adjusted max-width */}
 			<h1 className="text-3xl font-bold text-center mb-8 text-brand">
 				All Journal Entries
 			</h1>
+
+			{/* Filter Panel */}
+			<div className="bg-white p-4 rounded-lg shadow-md mb-8 flex flex-wrap items-center gap-4">
+				{/* Date Range: Start */}
+				<div>
+					<label className="block text-sm font-medium text-gray-700 mb-1">
+						Start Date
+					</label>
+					<input
+						type="date"
+						value={startDate}
+						onChange={(e) => setStartDate(e.target.value)}
+						className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
+					/>
+				</div>
+
+				{/* Date Range: End */}
+				<div>
+					<label className="block text-sm font-medium text-gray-700 mb-1">
+						End Date
+					</label>
+					<input
+						type="date"
+						value={endDate}
+						onChange={(e) => setEndDate(e.target.value)}
+						className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
+					/>
+				</div>
+
+				{/* Mood Selector */}
+				<div>
+					<label className="block text-sm font-medium text-gray-700 mb-1">
+						Mood
+					</label>
+					<select
+						value={selectedMood}
+						onChange={(e) => setSelectedMood(e.target.value)}
+						className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand"
+					>
+						<option value="">All Moods</option>
+						<option value="😊">😊 Happy</option>
+						<option value="😔">😔 Sad</option>
+						<option value="😠">😠 Angry</option>
+						<option value="😢">😢 Tearful</option>
+						<option value="😄">😄 Joyful</option>
+					</select>
+				</div>
+
+				{/* Only with Goal */}
+				<div className="flex items-center space-x-2">
+					<input
+						type="checkbox"
+						checked={onlyWithGoal}
+						onChange={(e) => setOnlyWithGoal(e.target.checked)}
+						id="goalCheckbox"
+						className="h-4 w-4 text-brand focus:ring-brand border-gray-300 rounded"
+					/>
+					<label htmlFor="goalCheckbox" className="text-sm text-gray-700">
+						Only with goal
+					</label>
+				</div>
+
+				{/* Search Box */}
+				<div className="flex items-center">
+					<input
+						type="text"
+						placeholder="Search..."
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+						className="p-1 border rounded-md text-sm"
+					/>
+					<AiOutlineSearch size={20} className="ml-2" />
+				</div>
+			</div>
+
+			{/* Filtered Journal Entries */}
 			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-				{" "}
-				{/* Max 5 columns */}
-				{journalEntries.map((entry) => (
+				{filteredEntries.map((entry) => (
 					<Link
-						to={`/journal/view/${entry.id}`} // Link to full view, using ID
+						to={`/journal/view/${entry.id}`}
 						key={entry.id}
-						className="relative bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 block" // Added block
+						className="relative bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 block"
 						style={{ aspectRatio: "9/16" }}
-						onClick={() => handleCardClick(entry.id)} // Pass entry ID.  Click handler *shouldn't* trigger a full page reload
+						onClick={() => handleCardClick(entry.id)}
 					>
 						{/* Background image */}
 						<img
@@ -150,7 +257,7 @@ const ViewJournal = () => {
 							className="absolute inset-0 w-full h-full object-cover"
 						/>
 
-						{/* Gradient overlay starting at 65% of card height */}
+						{/* Gradient overlay */}
 						<div
 							className="absolute inset-x-0"
 							style={{
@@ -160,19 +267,19 @@ const ViewJournal = () => {
 									"linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8))",
 							}}
 						>
-							<div className="p-3 h-full flex flex-col justify-between">
-								{/* Top row: Title on left and Mood on right */}
+							<div className="p-3 pb-0 h-full flex flex-col justify-between">
+								{/* Top row: Title & Mood */}
 								<div className="flex justify-between items-center">
-									<h2 className="text-lg font-semibold text-white">
+									<h2 className="text-base font-semibold text-white">
 										{entry.title}
 									</h2>
 									<span className="text-2xl">{entry.mood}</span>
 								</div>
 								{/* Body preview */}
-								<p className="text-sm text-white line-clamp-2 mt-2">
+								<p className="text-xs text-white line-clamp-2 overflow-hidden">
 									{entry.body}
 								</p>
-								{/* Bottom row: Date on the right */}
+								{/* Bottom row: Date */}
 								<div className="flex justify-end">
 									<p className="text-xs text-white">
 										{new Date(entry.date).toLocaleDateString("en-US", {
