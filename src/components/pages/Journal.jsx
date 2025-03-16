@@ -171,8 +171,23 @@ const QuoteWidget = () => {
 				}
 			} catch (error) {
 				console.error("Error fetching quote:", error);
-				setError("Failed to load quote. Check network or try again later.");
-				setQuote({ q: "Failed to load quote.", a: "Error" }); // Set error quote
+				try {
+					const response = await fetch("https://zenquotes.io/api/today");
+					if (!response.ok) {
+						throw new Error(`HTTP Error: ${response.status}`);
+					}
+					const data = await response.json();
+					if (data?.length > 0) {
+						setQuote(data[0]);
+						setError(null);
+					} else {
+						setQuote({ q: "No quote available.", a: "Unknown" });
+					}
+				} catch (error) {
+					console.error("Error fetching quote:", error);
+					setError("Failed to load quote. Check network or try again later.");
+					setQuote({ q: "Failed to load quote.", a: "Error" }); // Set error quote
+				}
 			}
 		};
 		fetchQuote();
