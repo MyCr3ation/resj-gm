@@ -1,3 +1,5 @@
+// server.js
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -13,6 +15,8 @@ app.use(cors());
 
 // Parse JSON bodies
 app.use(bodyParser.json());
+// Use cookie-parser middleware
+app.use(cookieParser());
 
 // Set up file upload using multer
 const storage = multer.diskStorage({
@@ -50,9 +54,14 @@ app.get("/api/quote", async (req, res) => {
 
 // Endpoint to proxy the Weather API
 app.get("/api/weather", async (req, res) => {
+	const weatherAPI = process.env.WEATHER_API;
+	const location = req.query.location || "Dubai";
+
 	try {
 		const response = await axios.get(
-			"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/Mumbai?contentType=json&key=<key>"
+			`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${encodeURIComponent(
+				location
+			)}?contentType=json&key=${weatherAPI}`
 		);
 		res.json(response.data);
 	} catch (error) {
@@ -61,7 +70,7 @@ app.get("/api/weather", async (req, res) => {
 	}
 });
 
-// In-memory storage for journal entries (for demonstration)
+// In-memory storage for journal entries (replace with Supabase for persistence)
 let journalEntries = [];
 
 // Endpoint to save a journal entry

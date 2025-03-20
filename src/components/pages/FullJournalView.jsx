@@ -7,8 +7,7 @@ import {
 	AiOutlineCheckCircle,
 } from "react-icons/ai";
 import { BsSun, BsFillCloudSunFill, BsChatSquareQuote } from "react-icons/bs";
-import { FaGrinHearts } from "react-icons/fa";
-import DynamicImage from "../common/DynamicImage.jsx"; // Adjust path as needed
+import DynamicImage from "../common/DynamicImage.jsx";
 
 const FullJournalView = () => {
 	const [isLoading, setIsLoading] = useState(true);
@@ -26,8 +25,13 @@ const FullJournalView = () => {
 				goal: "Complete the UI for the new feature",
 				affirmation:
 					"I am resilient, resourceful, and ready to embrace new challenges.",
-				reflection:
-					"The most impactful moment was the spontaneous conversation with my new friends.  It reminded me that connection is essential, and that shared experiences, even small ones, can create lasting bonds.  It also made me reflect on how important it is to be open to new experiences and people.",
+				reflection: {
+					// Changed to an object with question and answer
+					question:
+						"What was the most impactful moment of the day, and what did it teach you?",
+					answer:
+						"The most impactful moment was the spontaneous conversation with my new friends.  It reminded me that connection is essential, and that shared experiences, even small ones, can create lasting bonds.  It also made me reflect on how important it is to be open to new experiences and people.",
+				},
 				grateful:
 					"Today, I'm incredibly grateful for the good weather, the delicious food, the inspiring company of new friends, the opportunity to learn and expand my skills, and the sheer beauty of nature.",
 				weather: {
@@ -221,7 +225,7 @@ const FullJournalView = () => {
 						},
 						{
 							title: "Reflection",
-							content: journalEntry.reflection,
+							content: journalEntry.reflection, // Now an object
 							icon: AiOutlineInfoCircle,
 							tooltip: "Reflect on the day.",
 						},
@@ -231,8 +235,37 @@ const FullJournalView = () => {
 							icon: AiOutlineSmile,
 							tooltip: "List things you were grateful",
 						},
-					].map((section, index) =>
-						section.content ? (
+					].map((section, index) => {
+						// Special handling for Reflection
+						if (section.title === "Reflection") {
+							return (
+								<div
+									key={index}
+									className="bg-brandGreen-100 p-5 rounded-xl shadow-md"
+								>
+									<h3 className="text-xl font-semibold text-brandGreen-700 mb-3 flex items-center">
+										<section.icon
+											className="mr-2 text-brandGreen-500"
+											size={20}
+										/>
+										{section.title}
+										<AiOutlineInfoCircle
+											title={section.tooltip}
+											className="ml-2 text-brandGreen-400 cursor-pointer"
+										/>
+									</h3>
+									<p className="text-brandGreen-600 font-medium">
+										{section.content.question}
+									</p>
+									<p className="text-brandGreen-600">
+										{section.content.answer}
+									</p>
+								</div>
+							);
+						}
+
+						// All other sections
+						return section.content ? (
 							<div
 								key={index}
 								className="bg-brandGreen-100 p-5 rounded-xl shadow-md"
@@ -250,8 +283,8 @@ const FullJournalView = () => {
 								</h3>
 								<p className="text-brandGreen-600">{section.content}</p>
 							</div>
-						) : null
-					)}
+						) : null;
+					})}
 				</div>
 
 				{/* Weather and Quote (Side-by-Side) */}
