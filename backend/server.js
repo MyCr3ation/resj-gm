@@ -1,4 +1,5 @@
 // server.js
+
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -6,12 +7,26 @@ const bodyParser = require("body-parser");
 const axios = require("axios");
 const multer = require("multer");
 const path = require("path");
+const { v4: uuidv4 } = require("uuid"); // Import UUID
+const cookieParser = require("cookie-parser");
+const { createClient } = require("@supabase/supabase-js"); // Import Supabase
+const bcrypt = require("bcrypt"); // Import bcrypt
 
 const app = express();
 const port = process.env.PORT || 5500;
 
+// Supabase setup
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 // Enable CORS for all routes
-app.use(cors());
+app.use(
+	cors({
+		origin: ["http://localhost:5173", "http://localhost:5500"], // Adjust as needed for your frontend
+		credentials: true, // Important: Allow sending cookies
+	})
+);
 
 // Parse JSON bodies
 app.use(bodyParser.json());
@@ -88,6 +103,279 @@ app.post("/api/journal", (req, res) => {
 // Endpoint to retrieve all journal entries
 app.get("/api/journal", (req, res) => {
 	res.json(journalEntries);
+});
+
+// --- Google OAuth and User/Session Management ---
+
+app.post("/api/auth", async (req, res) => {
+	try {
+		const { name, email, provider, providerid } = req.body;
+
+		if (!email || !provider || !providerid) {
+			return res.status(400).json({
+				error: "Missing required fields (email, provider, providerid)",
+			});
+		}
+
+		// 1. Check if the user already exists
+		const { data: existingUser, error: userError } = await supabase
+			.from("user")
+			.select("*")
+			.eq("email", email)
+			.maybeSingle(); // Use maybeSingle to handle both 0 and 1 result
+
+		if (userError) {
+			console.error("Error checking for existing user:", userError);
+			return res.status(500).json({ error: "Database error" });
+		}
+
+		let userId;
+
+		if (existingUser) {
+			// 2. User exists: Update providerid if necessary (e.g., if they previously signed up with email/password)
+			userId = existingUser.uid;
+			if (
+				existingUser.provider !== provider ||
+				existingUser.providerid !== providerid
+			) {
+				const { error: updateError } = await supabase
+					.from("user")
+					.update({ provider, providerid })
+					.eq("uid", userId);
+
+				if (updateError) {
+					console.error("Error updating user:", updateError);
+					return res.status(500).json({ error: "Database error" });
+				}
+			}
+		} else {
+			// 3. User does not exist: Create a new user
+			const { data: newUser, error: insertError } = await supabase
+				.from("user")
+				.insert([
+					{
+						name: name || "Default Name", // Use a default if name is missing
+						email,
+						provider,
+						providerid,
+					},
+				])
+				.select(); // Important:  Select returns the newly created row
+
+			if (insertError) {
+				console.error("Error inserting user:", insertError);
+				return res.status(500).json({ error: "Database error" });
+			}
+			userId = newUser[0].uid; // Get the UID from the returned data
+		}
+
+		// 4. Generate USID
+		const usid = uuidv4();
+
+		// 5. Store USID in a cookie (HTTP-only, secure in production)
+		res.cookie("usid", usid, {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+			maxAge: 24 * 60 * 60 * 1000, // 1 day (in milliseconds).  Adjust as needed.
+			sameSite: "lax", // Recommended for security
+		});
+
+		// 6. (Optional) Store USID in the 'session' table
+		const { error: sessionError } = await supabase.from("session").insert([
+			{
+				usid,
+				user_uid: userId, // Use the obtained userId
+				//expires_at:  // Add expiration logic if needed
+			},
+		]);
+
+		if (sessionError) {
+			console.error("Error creating session:", sessionError);
+			// Don't necessarily return an error, as the cookie is the primary session mechanism
+		}
+
+		// 7. Send success response
+		res.status(200).json({ message: "Authentication successful" });
+	} catch (error) {
+		console.error("Error in /api/auth:", error);
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
+
+// Add a simple protected route example (using middleware)
+const authenticateUser = async (req, res, next) => {
+	const usid = req.cookies.usid;
+
+	if (!usid) {
+		return res.status(401).json({ error: "Unauthorized: No USID" });
+	}
+
+	// You could also query the 'session' table here to validate the USID against the database.
+	//  This would be important for features like forced logout or session expiry.
+
+	req.usid = usid; // Attach the usid to the request object for later use
+	next(); // Continue to the next middleware/route handler
+};
+
+app.get("/api/protected", authenticateUser, (req, res) => {
+	// If we reach here, the user is authenticated
+	res.json({ message: "This is a protected route", usid: req.usid });
+});
+
+//Logout endpoint
+app.post("/api/logout", async (req, res) => {
+	const usid = req.cookies.usid;
+	if (usid) {
+		// Delete the session from the 'session' table
+		const { error } = await supabase.from("session").delete().eq("usid", usid);
+		if (error) {
+			console.error("Error deleting session:", error);
+			// Optionally, handle the error (but still clear the cookie to log out the user)
+		}
+	}
+
+	// Clear the cookie
+	res.clearCookie("usid", {
+		httpOnly: true,
+		secure: process.env.NODE_ENV === "production",
+		sameSite: "lax",
+	});
+	res.status(200).json({ message: "Logged out successfully" });
+});
+
+// --- Manual Signup and Login ---
+
+app.post("/api/signup", async (req, res) => {
+	try {
+		const { name, email, password } = req.body;
+
+		if (!name || !email || !password) {
+			return res.status(400).json({ error: "Missing required fields" });
+		}
+
+		// Check if user already exists (using email)
+		const { data: existingUser, error: userError } = await supabase
+			.from("user")
+			.select("*")
+			.eq("email", email)
+			.maybeSingle();
+
+		if (userError) {
+			console.error("Database error:", userError);
+			return res.status(500).json({ error: "Database error" });
+		}
+
+		if (existingUser) {
+			return res
+				.status(409)
+				.json({ error: "User with this email already exists" }); // 409 Conflict
+		}
+
+		// Hash the password
+		const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
+
+		// Create the new user
+		const { data: newUser, error: insertError } = await supabase
+			.from("user")
+			.insert([
+				{
+					name,
+					email,
+					password: hashedPassword,
+					provider: "email", // Mark as email signup
+				},
+			])
+			.select();
+
+		if (insertError) {
+			console.error("Error inserting user:", insertError);
+			return res
+				.status(500)
+				.json({ error: "Database error during user creation" });
+		}
+
+		// Create session (same as Google Auth)
+		const usid = uuidv4();
+		res.cookie("usid", usid, {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+			maxAge: 24 * 60 * 60 * 1000,
+			sameSite: "lax",
+		});
+
+		const { error: sessionError } = await supabase.from("session").insert([
+			{
+				usid,
+				user_uid: newUser[0].uid, // Use the obtained userId
+				//expires_at:  // Add expiration logic if needed
+			},
+		]);
+
+		if (sessionError) {
+			console.log("Error creating session: ", sessionError);
+		}
+		res.status(201).json({ message: "Signup successful" }); // 201 Created
+	} catch (error) {
+		console.error("Signup error:", error);
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
+
+app.post("/api/login", async (req, res) => {
+	try {
+		const { email, password } = req.body;
+
+		if (!email || !password) {
+			return res.status(400).json({ error: "Missing required fields" });
+		}
+
+		// Retrieve the user by email
+		const { data: user, error: userError } = await supabase
+			.from("user")
+			.select("*")
+			.eq("email", email)
+			.maybeSingle();
+
+		if (userError) {
+			console.error("Database error:", userError);
+			return res.status(500).json({ error: "Database error" });
+		}
+
+		if (!user) {
+			return res.status(401).json({ error: "Invalid credentials" }); // 401 Unauthorized
+		}
+
+		// Compare the password
+		const passwordMatch = await bcrypt.compare(password, user.password);
+
+		if (!passwordMatch) {
+			return res.status(401).json({ error: "Invalid credentials" }); // 401 Unauthorized
+		}
+
+		// Create session (same as Google Auth and signup)
+		const usid = uuidv4();
+		res.cookie("usid", usid, {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+			maxAge: 24 * 60 * 60 * 1000,
+			sameSite: "lax",
+		});
+		const { error: sessionError } = await supabase.from("session").insert([
+			{
+				usid,
+				user_uid: user.uid, // Use the obtained userId
+				//expires_at:  // Add expiration logic if needed
+			},
+		]);
+
+		if (sessionError) {
+			console.log("Error creating a session: ", sessionError);
+		}
+		res.status(200).json({ message: "Login successful" });
+	} catch (error) {
+		console.error("Login error:", error);
+		res.status(500).json({ error: "Internal server error" });
+	}
 });
 
 app.listen(port, () => {
