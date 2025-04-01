@@ -1,51 +1,47 @@
 // Quote.jsx
-
 import React, { useState, useEffect } from "react";
-import { toast } from "react-hot-toast";
+import useStore from "../../store/store.jsx";
 
 const Quote = () => {
 	const [quote, setQuote] = useState(null);
 	const [error, setError] = useState(null);
-	const [isLoading, setIsLoading] = useState(true); // Add a loading state
+	const [isLoading, setIsLoading] = useState(true);
+	const setStore = useStore((state) => state.setStore);
 
 	useEffect(() => {
 		const fetchQuote = async () => {
-			setIsLoading(true); // Set loading to true before fetching
-			setError(null); // Clear previous errors
-
+			setIsLoading(true);
+			setError(null);
 			try {
-				const response = await fetch("http://localhost:5500/api/quote"); // Use relative path
-
+				const response = await fetch("http://localhost:5500/api/quote");
 				if (!response.ok) {
-					// throw new Error(`HTTP Error: ${response.status}`); //old way
-					throw new Error(`HTTP error! Status: ${response.status}`); //new way, more readable
+					throw new Error(`HTTP error! Status: ${response.status}`);
 				}
-
 				const data = await response.json();
-
-				if (data && data.length > 0) {
-					setQuote(data[0]); // Correctly access the first quote
-				} else {
-					// Specific "no quote" message, *after* loading.
-					setQuote({ q: "No quote available for today.", a: "Unknown" });
-				}
+				const fetchedQuote =
+					data && data.length > 0
+						? data[0]
+						: { q: "No quote available for today.", a: "Unknown" };
+				setQuote(fetchedQuote);
+				// Update the global journal store for the quote.
+				setStore("journal.quote", fetchedQuote);
 			} catch (error) {
 				console.error("Error fetching quote:", error);
-				setError(error.message); // Display the actual error message
-				setQuote({ q: "Failed to load quote", a: "Error" }); // Consistent error quote
+				setError(error.message);
+				const fallback = { q: "Failed to load quote", a: "Error" };
+				setQuote(fallback);
+				setStore("journal.quote", fallback);
 			} finally {
-				setIsLoading(false); // Set loading to false after fetching, success or fail
+				setIsLoading(false);
 			}
 		};
 
 		fetchQuote();
-	}, []);
+	}, [setStore]);
 
 	return (
 		<div className="bg-white rounded-lg shadow p-5 border border-gray-100 transition-all hover:shadow-md">
-			{/*  <SectionTitle>Quote</SectionTitle> -- Assuming SectionTitle is defined elsewhere */}
-			<h2 className="text-lg font-semibold mb-2">Quote</h2>{" "}
-			{/*  Simpler SectionTitle  */}
+			<h2 className="text-lg font-semibold mb-2">Quote</h2>
 			{error && <p className="text-red-500 text-sm">{error}</p>}
 			{isLoading ? (
 				<p className="text-sm">Loading Quote...</p>
@@ -59,4 +55,5 @@ const Quote = () => {
 		</div>
 	);
 };
+
 export default Quote;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Input from "../common/Input";
+import Cookies from "js-cookie";
 import { toast } from "react-hot-toast";
 import useStore from "../../store/store.jsx";
 import MediaAttachment from "../journal/MediaAttachment.jsx";
@@ -10,6 +11,18 @@ import SectionTitle from "../common/SectionTitle.jsx";
 
 // --- Main Journal Component ---
 
+const initialJournalState = {
+	date: new Date().toISOString().split("T")[0],
+	mood: "",
+	heading: "",
+	body: "",
+	goal: "",
+	affirmation: "",
+	reflection: "",
+	quote: "",
+	reflectionQuestion: "",
+};
+
 const Journal = () => {
 	const journal = useStore((state) => state.store.journal);
 	const setStore = useStore((state) => state.setStore);
@@ -17,6 +30,51 @@ const Journal = () => {
 	const [filesChanged, setFilesChanged] = useState(false);
 	const [userLocation, setUserLocation] = useState(null);
 
+	// Load draft on mount
+	useEffect(() => {
+		const savedDraft = Cookies.get("journalDraft");
+		if (savedDraft) {
+			const draftData = JSON.parse(savedDraft);
+			setStore("journal", draftData);
+		}
+	}, []);
+
+	// Fetch reflection question if not already set
+	useEffect(() => {
+		if (!journal?.reflectionQuestion) {
+			const fetchReflectionQuestion = async () => {
+				try {
+					const response = await fetch(
+						"http://localhost:5500/api/reflectionQuestion"
+					);
+					if (!response.ok) {
+						throw new Error(`HTTP error: ${response.status}`);
+					}
+					const data = await response.json();
+					setStore("journal.reflectionQuestion", data.question);
+					Cookies.set(
+						"journalDraft",
+						JSON.stringify({ ...journal, reflectionQuestion: data.question }),
+						{ expires: 1 }
+					);
+				} catch (error) {
+					console.error("Error fetching reflection question:", error);
+					setStore(
+						"journal.reflectionQuestion",
+						"What was the most impactful moment of your day?"
+					);
+				}
+			};
+			fetchReflectionQuestion();
+		}
+	}, [journal?.reflectionQuestion, setStore]);
+
+	// Write journal changes to cookie
+	useEffect(() => {
+		Cookies.set("journalDraft", JSON.stringify(journal), { expires: 1 });
+	}, [journal]);
+
+	// Get user location
 	useEffect(() => {
 		const getLocation = async () => {
 			if (navigator.geolocation) {
@@ -92,11 +150,18 @@ const Journal = () => {
 			goal: journal.goal,
 			affirmation: journal.affirmation,
 			reflection: journal.reflection,
+			quote: journal.quote,
+			reflectionQuestion: journal.reflectionQuestion,
 			files: uploadedFiles,
 		};
 
 		console.log("Submitting:", journalData);
 		toast.success("Journal entry saved!");
+
+		// Clear the journal state so that the cookie is updated to an empty or initial state.
+		setStore("journal", { ...initialJournalState });
+		// Optionally remove the cookie if you don't want any lingering data:
+		Cookies.remove("journalDraft");
 	};
 
 	return (
@@ -214,7 +279,8 @@ const Journal = () => {
 							</SectionTitle>
 							<div className="bg-brandGreen-50 rounded-lg p-3 mb-3 border border-brandGreen-100">
 								<p className="text-sm text-brandGreen-800 font-medium">
-									What was the most impactful moment of your day?
+									{journal?.reflectionQuestion ||
+										"Loading reflection question..."}
 								</p>
 							</div>
 							<textarea

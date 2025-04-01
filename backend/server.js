@@ -85,6 +85,35 @@ app.get("/api/weather", async (req, res) => {
 	}
 });
 
+// Endpoint to retrieve a reflection question
+app.get("/api/reflectionQuestion", async (req, res) => {
+	try {
+		// Query the reflection table for all records
+		const { data, error } = await supabase.from("reflection").select("*");
+
+		if (error) {
+			console.error("Error fetching reflection questions:", error);
+			return res
+				.status(500)
+				.json({ error: "Error fetching reflection questions" });
+		}
+
+		if (!data || data.length === 0) {
+			return res.status(404).json({ error: "No reflection questions found" });
+		}
+
+		// Optionally, if you have multiple reflection questions,
+		// select one at random to return:
+		const randomIndex = Math.floor(Math.random() * data.length);
+		const selectedReflection = data[randomIndex];
+
+		res.json(selectedReflection);
+	} catch (err) {
+		console.error("Error in /api/reflectionQuestion:", err);
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
+
 // In-memory storage for journal entries (replace with Supabase for persistence)
 let journalEntries = [];
 
