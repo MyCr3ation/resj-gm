@@ -32,13 +32,9 @@ function App() {
 
 	const handleLogout = async () => {
 		try {
-			const response = await axios.post(
-				"https://resj-gm-1.onrender.com/api/logout" ||
-					"http://localhost:5500/api/logout",
-				{
-					withCredentials: true,
-				}
-			);
+			const response = await axios.post("http://localhost:5500/api/logout", {
+				withCredentials: true,
+			});
 
 			if (response.status === 200) {
 				setIsAuthenticated(false); // Update authentication status
@@ -58,8 +54,7 @@ function App() {
 			setLoadingAuth(true);
 			try {
 				const response = await axios.get(
-					"https://resj-gm-1.onrender.com/api/protected" ||
-						"http://localhost:5500/api/protected",
+					"http://localhost:5500/api/protected",
 					{
 						withCredentials: true,
 					}

@@ -13,10 +13,7 @@ const Quote = () => {
 			setIsLoading(true);
 			setError(null);
 			try {
-				const response = await fetch(
-					"https://resj-gm-1.onrender.com/api/quote" ||
-						"http://localhost:5500/api/quote"
-				);
+				const response = await fetch("http://localhost:5500/api/quote");
 				if (!response.ok) {
 					throw new Error(`HTTP error! Status: ${response.status}`);
 				}

@@ -47,8 +47,7 @@ const Journal = () => {
 			const fetchReflectionQuestion = async () => {
 				try {
 					const response = await fetch(
-						"https://resj-gm-1.onrender.com/api/reflectionQuestion" ||
-							"http://localhost:5500/api/reflectionQuestion"
+						"http://localhost:5500/api/reflectionQuestion"
 					);
 					if (!response.ok) {
 						throw new Error(`HTTP error: ${response.status}`);
@@ -171,18 +170,14 @@ const Journal = () => {
 		};
 
 		try {
-			const response = await fetch(
-				"https://resj-gm-1.onrender.com/api/journal" ||
-					"http://localhost:5500/api/journal",
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					credentials: "include",
-					body: JSON.stringify(journalData),
-				}
-			);
+			const response = await fetch("http://localhost:5500/api/journal", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				credentials: "include",
+				body: JSON.stringify(journalData),
+			});
 			if (!response.ok) {
 				throw new Error("Failed to save journal entry");
 			}

@@ -32,14 +32,10 @@ const MediaAttachment = ({ handleFileChange }) => {
 			formData.append("file", file);
 
 			try {
-				const response = await fetch(
-					"https://resj-gm-1.onrender.com/api/upload" ||
-						"http://localhost:5500/api/upload",
-					{
-						method: "POST",
-						body: formData,
-					}
-				);
+				const response = await fetch("http://localhost:5500/api/upload", {
+					method: "POST",
+					body: formData,
+				});
 
 				if (!response.ok) {
 					const errorData = await response.json();
