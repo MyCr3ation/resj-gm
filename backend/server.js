@@ -1022,6 +1022,10 @@ app.delete("/api/journal/:id/media", authenticateUser, async (req, res) => {
 		res.status(500).json({ error: "Internal server error" });
 	}
 });
+
+app.get("/api/testing", async (req, res) => {
+	console.log("Testing server working");
+});
 app.listen(port, () => {
 	console.log(`Server is running on port ${port}`);
 });
