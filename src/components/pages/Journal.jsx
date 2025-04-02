@@ -47,7 +47,7 @@ const Journal = () => {
 			const fetchReflectionQuestion = async () => {
 				try {
 					const response = await fetch(
-						"https://resj-gm.onrender.com/api/reflectionQuestion" ||
+						"https://resj-gm-1.onrender.com/api/reflectionQuestion" ||
 							"http://localhost:5500/api/reflectionQuestion"
 					);
 					if (!response.ok) {
@@ -172,7 +172,7 @@ const Journal = () => {
 
 		try {
 			const response = await fetch(
-				"https://resj-gm.onrender.com/api/journal" ||
+				"https://resj-gm-1.onrender.com/api/journal" ||
 					"http://localhost:5500/api/journal",
 				{
 					method: "POST",

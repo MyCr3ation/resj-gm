@@ -14,7 +14,7 @@ const Quote = () => {
 			setError(null);
 			try {
 				const response = await fetch(
-					"https://resj-gm.onrender.com/api/quote" ||
+					"https://resj-gm-1.onrender.com/api/quote" ||
 						"http://localhost:5500/api/quote"
 				);
 				if (!response.ok) {

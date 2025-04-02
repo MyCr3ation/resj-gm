@@ -32,7 +32,7 @@ app.use(
 		origin: [
 			"http://localhost:5173",
 			"http://localhost:5500",
-			"https://resj-gm.onrender.com",
+			"https://resj-gm-1.onrender.com",
 		], // Adjust as needed for your frontend
 		credentials: true, // Important: Allow sending cookies
 	})

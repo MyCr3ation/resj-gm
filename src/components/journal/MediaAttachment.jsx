@@ -33,7 +33,7 @@ const MediaAttachment = ({ handleFileChange }) => {
 
 			try {
 				const response = await fetch(
-					"https://resj-gm.onrender.com/api/upload" ||
+					"https://resj-gm-1.onrender.com/api/upload" ||
 						"http://localhost:5500/api/upload",
 					{
 						method: "POST",

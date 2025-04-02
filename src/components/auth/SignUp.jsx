@@ -100,7 +100,7 @@ function Credentials() {
 	const handleSignup = async () => {
 		try {
 			const response = await axios.post(
-				"https://resj-gm.onrender.com/api/signup" ||
+				"https://resj-gm-1.onrender.com/api/signup" ||
 					"http://localhost:5500/api/signup",
 				formData, // Send the signup form data
 				{ withCredentials: true }
@@ -121,7 +121,7 @@ function Credentials() {
 	const handleLogin = async () => {
 		try {
 			const response = await axios.post(
-				"https://resj-gm.onrender.com/api/login" ||
+				"https://resj-gm-1.onrender.com/api/login" ||
 					"http://localhost:5500/api/login",
 				loginData, // Send the login form data
 				{ withCredentials: true }
@@ -175,7 +175,7 @@ function Credentials() {
 
 			// 2. Send user data to your backend
 			const backendResponse = await axios.post(
-				"https://resj-gm.onrender.com/api/auth" ||
+				"https://resj-gm-1.onrender.com/api/auth" ||
 					"http://localhost:5500/api/auth", // Your backend endpoint
 				{
 					name: userData.name,
@@ -204,7 +204,7 @@ function Credentials() {
 		const checkCookie = async () => {
 			try {
 				const response = await axios.get(
-					"https://resj-gm.onrender.com/api/protected" ||
+					"https://resj-gm-1.onrender.com/api/protected" ||
 						"http://localhost:5500/api/protected",
 					{
 						withCredentials: true,
