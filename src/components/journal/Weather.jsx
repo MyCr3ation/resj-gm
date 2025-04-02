@@ -1,31 +1,26 @@
-// Weather.jsx
 import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import SectionTitle from "../common/SectionTitle";
+import useStore from "../../store/store.jsx"; // <-- Added import
 
 const Weather = ({ userLocation }) => {
-	const [temperatureF, setTemperatureF] = useState(null); // Store Fahrenheit
-	const [temperatureC, setTemperatureC] = useState(null); // Store Celsius
+	const [temperatureF, setTemperatureF] = useState(null);
+	const [temperatureC, setTemperatureC] = useState(null);
 	const [weatherLocation, setWeatherLocation] = useState(null);
 	const [error, setError] = useState(null);
-	const [unit, setUnit] = useState("F"); // 'F' for Fahrenheit, 'C' for Celsius
+	const [unit, setUnit] = useState("F");
+	const setStore = useStore((state) => state.setStore); // <-- Get setStore
 
 	useEffect(() => {
 		const fetchWeather = async () => {
-			if (!userLocation) {
-				// userLocation = "Dubai";
-				return;
-			}
+			if (!userLocation) return;
 
 			try {
-				// Pass userLocation as a query parameter
 				const response = await fetch(
 					`http://localhost:5500/api/weather?location=${encodeURIComponent(
 						userLocation
 					)}`
 				);
-				console.log(userLocation);
-
 				if (!response.ok) {
 					throw new Error(`HTTP error! Status: ${response.status}`);
 				}
@@ -33,10 +28,15 @@ const Weather = ({ userLocation }) => {
 				const data = await response.json();
 				if (data && data.days && data.days.length > 0) {
 					const tempF = data.days[0].temp;
+					const tempC = convertFtoC(tempF);
+					const condition = data.days[0].conditions;
 					setTemperatureF(tempF);
-					setTemperatureC(convertFtoC(tempF)); // Calculate Celsius
+					setTemperatureC(tempC);
 					setWeatherLocation(data.resolvedAddress);
-					setError(null);
+					// Update the global journal store with weather data.
+					setStore("journal.temperaturef", tempF);
+					setStore("journal.temperaturec", tempC);
+					setStore("journal.condition", condition);
 				} else {
 					setError("No weather data available for your location.");
 				}
@@ -47,14 +47,10 @@ const Weather = ({ userLocation }) => {
 		};
 
 		fetchWeather();
-	}, [userLocation]);
+	}, [userLocation, setStore]);
 
 	const convertFtoC = (fahrenheit) => {
 		return ((fahrenheit - 32) * 5) / 9;
-	};
-
-	const convertCtoF = (celsius) => {
-		return (celsius * 9) / 5 + 32;
 	};
 
 	const toggleUnit = () => {
@@ -73,7 +69,7 @@ const Weather = ({ userLocation }) => {
 						Temperature:{" "}
 						{unit === "F"
 							? temperatureF !== null
-								? `${temperatureF.toFixed(1)}°F` //toFixed() to keep it neat
+								? `${temperatureF.toFixed(1)}°F`
 								: "Loading..."
 							: temperatureC !== null
 							? `${temperatureC.toFixed(1)}°C`

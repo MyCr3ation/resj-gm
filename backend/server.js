@@ -11,6 +11,7 @@ const { v4: uuidv4 } = require("uuid"); // Import UUID
 const cookieParser = require("cookie-parser");
 const { createClient } = require("@supabase/supabase-js"); // Import Supabase
 const bcrypt = require("bcrypt"); // Import bcrypt
+const fs = require("fs");
 
 const app = express();
 const port = process.env.PORT || 5500;
@@ -33,24 +34,30 @@ app.use(bodyParser.json());
 // Use cookie-parser middleware
 app.use(cookieParser());
 
-// Set up file upload using multer
+const uploadDir = path.join(__dirname, "uploads");
+
+if (!fs.existsSync(uploadDir)) {
+	fs.mkdirSync(uploadDir);
+	console.log("Uploads folder created.");
+}
+
 const storage = multer.diskStorage({
 	destination: function (req, file, cb) {
-		cb(null, "uploads/"); // Ensure you create this folder in your project root
+		cb(null, uploadDir); // Use the created uploads folder
 	},
 	filename: function (req, file, cb) {
-		// Use a timestamp plus original file name
 		cb(null, Date.now() + "-" + file.originalname);
 	},
 });
+
 const upload = multer({
 	storage,
-	limits: { fileSize: 100 * 1024 * 1024 }, // limit to 100MB
+	limits: { fileSize: 100 * 1024 * 1024 }, // limit to 100MB per file
 });
 
-// Endpoint to upload media attachments
 app.post("/api/upload", upload.single("file"), (req, res) => {
 	if (!req.file) {
+		console.error("No file uploaded");
 		return res.status(400).json({ error: "No file uploaded" });
 	}
 	res.json({ message: "File uploaded successfully", file: req.file });
@@ -117,21 +124,161 @@ app.get("/api/reflectionQuestion", async (req, res) => {
 // In-memory storage for journal entries (replace with Supabase for persistence)
 let journalEntries = [];
 
-// Endpoint to save a journal entry
-app.post("/api/journal", (req, res) => {
-	const journalEntry = req.body;
-	// Basic validation
-	if (!journalEntry.date || !journalEntry.heading || !journalEntry.body) {
-		return res.status(400).json({ error: "Missing required fields" });
-	}
-	journalEntry.id = journalEntries.length + 1;
-	journalEntries.push(journalEntry);
-	res.json({ message: "Journal entry saved successfully", journalEntry });
-});
+// Endpoint to add a journal entry along with its media
+app.post("/api/journal", async (req, res) => {
+	console.log("Received journal entry:", req.body);
+	try {
+		// Destructure the journal data from the request body
+		const {
+			date,
+			mood,
+			title, // maps to "title" column (journal title)
+			body,
+			goal,
+			affirmation,
+			reflectionQuestion, // Reflection Question to find the rid
+			reflection_answer,
+			location,
+			temperaturec,
+			temperaturef,
+			condition,
+			quote,
+			quote_author,
+			media, // Optional array of media objects: each { mediatype, filePath }
+		} = req.body;
 
-// Endpoint to retrieve all journal entries
-app.get("/api/journal", (req, res) => {
-	res.json(journalEntries);
+		// Get the usid from cookie (ensure your client has set the cookie "usid")
+		const usid = req.cookies.usid;
+		if (!usid) {
+			return res.status(401).json({ error: "User not authenticated" });
+		}
+
+		// Query the session table to retrieve the user_uid based on the usid.
+		const { data: sessionRecord, error: sessionQueryError } = await supabase
+			.from("session")
+			.select("user_uid")
+			.eq("usid", usid)
+			.maybeSingle();
+
+		if (sessionQueryError || !sessionRecord) {
+			return res.status(401).json({ error: "User session not found" });
+		}
+
+		let uid = sessionRecord.user_uid; // Now you have the user's uid.
+
+		const { data: reflectionQuestionRecord, error: reflectionQueryError } =
+			await supabase
+				.from("reflection")
+				.select("rid")
+				.eq("question", reflectionQuestion)
+				.maybeSingle();
+
+		if (reflectionQueryError || !reflectionQuestionRecord) {
+			return res.status(401).json({ error: "Reflection Question not Found" });
+		}
+
+		const rid = reflectionQuestionRecord.rid;
+
+		// Insert the journal entry into the "journal" table.
+		// created_at and updated_at are assumed to be handled automatically (or you can set them here).
+		const { data: journalData, error: journalError } = await supabase
+			.from("journal")
+			.insert([
+				{
+					uid,
+					rid,
+					date,
+					mood,
+					title,
+					body,
+					goal,
+					affirmation,
+					reflection_answer,
+					location,
+					temperaturec,
+					temperaturef,
+					condition,
+					quote,
+					quote_author,
+				},
+			])
+			.select();
+
+		if (journalError) {
+			console.error("Error inserting journal entry:", journalError);
+			return res.status(500).json({ error: "Failed to insert journal entry" });
+		}
+
+		// Get the generated journal id from the insert result
+		const journalId = journalData[0].id;
+
+		// If there is media data, process each media item.
+		// Process each media item if any
+		if (media && Array.isArray(media)) {
+			// Import the S3 client and PutObjectCommand from AWS SDK v3
+			const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+
+			// Setup S3 client using AWS SDK v3
+			const s3Client = new S3Client({
+				endpoint: "https://dkswqfkufgcfvectiaph.supabase.co/storage/v1/s3",
+				region: "ap-south-1",
+				credentials: {
+					accessKeyId: process.env.SUPABASE_STORAGE_ACCESS_KEY, // Set in your .env file
+					secretAccessKey: process.env.SUPABASE_STORAGE_SECRET_KEY, // Set in your .env file
+				},
+				forcePathStyle: true,
+			});
+
+			for (const item of media) {
+				// Ensure each media item has a valid filePath and mediatype
+				if (!item.filePath || !item.mediatype) continue;
+
+				try {
+					// Read the file from disk
+					const fileBuffer = fs.readFileSync(item.filePath);
+					const fileName = path.basename(item.filePath);
+					// Construct a unique storage path for the file inside a folder for this journal entry
+					const storagePath = `journal_${journalId}/${Date.now()}_${fileName}`;
+
+					// Create and send the PutObjectCommand using the v3 client
+					const putCommand = new PutObjectCommand({
+						Bucket: "media-data", // Your bucket name
+						Key: storagePath,
+						Body: fileBuffer,
+						ContentType: item.mediatype,
+					});
+					await s3Client.send(putCommand);
+
+					// Construct the public URL manually. This URL pattern assumes that your bucket is public.
+					const publicURL = `https://dkswqfkufgcfvectiaph.supabase.co/storage/v1/object/public/media-data/${storagePath}`;
+
+					// Insert a record for the media in the "media" table
+					const { error: mediaInsertError } = await supabase
+						.from("media")
+						.insert([
+							{
+								jid: journalId, // FK linking to the journal entry
+								mediatype: item.mediatype,
+								mediaurl: publicURL,
+							},
+						]);
+					if (mediaInsertError) {
+						console.error("Error inserting media record:", mediaInsertError);
+					}
+				} catch (err) {
+					console.error("Error processing media item with S3:", err);
+				}
+			}
+		}
+
+		return res.json({
+			message: "Journal entry saved successfully",
+			journalEntry: journalData[0],
+		});
+	} catch (error) {
+		console.error("Error in /api/journal:", error);
+		return res.status(500).json({ error: "Internal server error" });
+	}
 });
 
 // --- Google OAuth and User/Session Management ---

@@ -10,7 +10,6 @@ import MoodSelector from "../journal/MoodSelector.jsx";
 import SectionTitle from "../common/SectionTitle.jsx";
 
 // --- Main Journal Component ---
-
 const initialJournalState = {
 	date: new Date().toISOString().split("T")[0],
 	mood: "",
@@ -21,6 +20,8 @@ const initialJournalState = {
 	reflection: "",
 	quote: "",
 	reflectionQuestion: "",
+	media: [],
+	uploadedFiles: [],
 };
 
 const Journal = () => {
@@ -29,6 +30,8 @@ const Journal = () => {
 	const [uploadedFiles, setUploadedFiles] = useState([]);
 	const [filesChanged, setFilesChanged] = useState(false);
 	const [userLocation, setUserLocation] = useState(null);
+	// New state to force remounting of MediaAttachment component
+	const [mediaResetKey, setMediaResetKey] = useState(0);
 
 	// Load draft on mount
 	useEffect(() => {
@@ -52,6 +55,7 @@ const Journal = () => {
 					}
 					const data = await response.json();
 					setStore("journal.reflectionQuestion", data.question);
+					setStore("journal.rid", data.rid);
 					Cookies.set(
 						"journalDraft",
 						JSON.stringify({ ...journal, reflectionQuestion: data.question }),
@@ -128,7 +132,7 @@ const Journal = () => {
 		console.log("files in parent", files);
 	};
 
-	const handleSubmit = () => {
+	const handleSubmit = async () => {
 		if (!journal?.date) {
 			toast.error("Please select a date.");
 			return;
@@ -142,26 +146,53 @@ const Journal = () => {
 			return;
 		}
 
+		// Build the journal data payload.
 		const journalData = {
+			rid: journal.rid,
 			date: journal.date,
 			mood: journal.mood,
-			heading: journal.heading,
+			title: journal.heading,
 			body: journal.body,
 			goal: journal.goal,
 			affirmation: journal.affirmation,
-			reflection: journal.reflection,
-			quote: journal.quote,
+			reflection_answer: journal.reflection,
 			reflectionQuestion: journal.reflectionQuestion,
-			files: uploadedFiles,
+			temperaturec: journal.temperaturec || null,
+			temperaturef: journal.temperaturef || null,
+			condition: journal.condition || null,
+			location: userLocation || "Dubai",
+			quote: journal.quote ? journal.quote.q : "",
+			quote_author: journal.quote ? journal.quote.a : "",
+			media: uploadedFiles,
 		};
 
-		console.log("Submitting:", journalData);
-		toast.success("Journal entry saved!");
+		try {
+			const response = await fetch("http://localhost:5500/api/journal", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				credentials: "include",
+				body: JSON.stringify(journalData),
+			});
+			if (!response.ok) {
+				throw new Error("Failed to save journal entry");
+			}
+			const result = await response.json();
+			console.log("Journal entry saved:", result);
+			toast.success("Journal entry saved!");
 
-		// Clear the journal state so that the cookie is updated to an empty or initial state.
-		setStore("journal", { ...initialJournalState });
-		// Optionally remove the cookie if you don't want any lingering data:
-		Cookies.remove("journalDraft");
+			// Clear the global journal state, local file state, and remove the cookie.
+			setStore("journal", { ...initialJournalState });
+			setUploadedFiles([]); // Clear the uploadedFiles state
+			Cookies.remove("journalDraft");
+
+			// Force remount of the MediaAttachment component by updating its key.
+			setMediaResetKey((prev) => prev + 1);
+		} catch (error) {
+			console.error("Error saving journal entry:", error);
+			toast.error("Failed to save journal entry");
+		}
 	};
 
 	return (
@@ -174,7 +205,6 @@ const Journal = () => {
 				{/* Left column - Date and mood */}
 				<div className="md:col-span-1 space-y-6">
 					<div className="bg-white rounded-lg shadow p-5 border border-gray-100 transition-all hover:shadow-md">
-						{/* Date input using full date */}
 						<div className="mb-4">
 							<SectionTitle>Date</SectionTitle>
 							<Input
@@ -186,11 +216,8 @@ const Journal = () => {
 								className="border-2 border-brandGreen-100 focus:border-brandGreen-300"
 							/>
 						</div>
-
-						{/* Mood selector with improved styling */}
 						<div>
 							<SectionTitle>Today's Mood</SectionTitle>
-
 							<MoodSelector
 								selectedMood={journal?.mood}
 								onMoodChange={(emoji) => setStore("journal.mood", emoji)}
@@ -199,17 +226,12 @@ const Journal = () => {
 						</div>
 					</div>
 
-					{/* Weather card */}
 					<WeatherWidget userLocation={userLocation} />
-
-					{/* Quote card */}
-					{/* <QuoteWidgetAPI /> */}
 					<QuoteWidget />
 				</div>
 
 				{/* Main column - Journal content */}
 				<div className="md:col-span-2 space-y-6">
-					{/* Header section */}
 					<div className="bg-white rounded-lg shadow p-5 border border-gray-100 transition-all hover:shadow-md">
 						<SectionTitle tooltip="A short description about your day">
 							Journal Title
@@ -223,7 +245,6 @@ const Journal = () => {
 						/>
 					</div>
 
-					{/* Body section */}
 					<div className="bg-white rounded-lg shadow p-5 border border-gray-100 transition-all hover:shadow-md">
 						<SectionTitle tooltip="Write what happened during your day">
 							Today's Story
@@ -238,7 +259,6 @@ const Journal = () => {
 						/>
 					</div>
 
-					{/* Goal section */}
 					<div className="bg-white rounded-lg shadow p-5 border border-gray-100 transition-all hover:shadow-md">
 						<SectionTitle tooltip="Optional: Set a short term or next day goal">
 							Tomorrow's Goal
@@ -252,13 +272,10 @@ const Journal = () => {
 						/>
 					</div>
 
-					{/* Personal growth section - combines affirmation and reflection */}
 					<div className="bg-white rounded-lg shadow p-5 border border-gray-100 transition-all hover:shadow-md">
 						<h3 className="text-lg font-medium text-gray-800 mb-3 text-center md:text-left">
 							Personal Growth
 						</h3>
-
-						{/* Affirmation */}
 						<div className="mb-5">
 							<SectionTitle tooltip="What did you learn today?">
 								Today's Affirmation
@@ -271,8 +288,6 @@ const Journal = () => {
 								className="border-b-2 border-brandGreen-100 focus:border-brandGreen-300"
 							/>
 						</div>
-
-						{/* Reflection with a sample question */}
 						<div>
 							<SectionTitle tooltip="Reflect on the day. Answer the question below">
 								Reflection
@@ -294,13 +309,14 @@ const Journal = () => {
 						</div>
 					</div>
 
-					{/* Media Attachments */}
 					<div className="bg-white rounded-lg shadow p-5 border border-gray-100 transition-all hover:shadow-md">
-						<MediaAttachment handleFileChange={handleFileChange} />
+						<MediaAttachment
+							key={mediaResetKey} // key prop forces remount on reset
+							handleFileChange={handleFileChange}
+						/>
 					</div>
 				</div>
 			</div>
-			{/* Submit Button */}
 			<div className="mt-6 flex justify-end">
 				<button
 					type="button"

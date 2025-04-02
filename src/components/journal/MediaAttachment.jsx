@@ -4,19 +4,20 @@ import { AiOutlineInfoCircle } from "react-icons/ai";
 const MediaAttachment = ({ handleFileChange }) => {
 	const [files, setFiles] = useState([]);
 
-	const handleCombinedFileChange = (event) => {
+	const handleCombinedFileChange = async (event) => {
 		const newFiles = Array.from(event.target.files);
 
+		// Check total size against 500MB limit
 		let totalSize = newFiles.reduce((sum, file) => sum + file.size, 0);
 		for (let existingFile of files) {
 			totalSize += existingFile.size;
 		}
-
 		if (totalSize > 500 * 1024 * 1024) {
 			alert("Total file size exceeds the limit (500MB).");
 			return;
 		}
 
+		// Check each file's size (max 100MB)
 		for (const file of newFiles) {
 			if (file.size > 100 * 1024 * 1024) {
 				alert(`File "${file.name}" is too large! Maximum size is 100MB.`);
@@ -24,7 +25,44 @@ const MediaAttachment = ({ handleFileChange }) => {
 			}
 		}
 
-		const updatedFiles = [...files, ...newFiles];
+		// Upload each file and construct the media object using the returned data
+		const uploadedFileData = [];
+		for (const file of newFiles) {
+			const formData = new FormData();
+			formData.append("file", file);
+
+			try {
+				const response = await fetch("http://localhost:5500/api/upload", {
+					method: "POST",
+					body: formData,
+				});
+
+				if (!response.ok) {
+					const errorData = await response.json();
+					console.error("Upload failed:", errorData);
+					alert(
+						`Failed to upload file ${file.name}: ${
+							errorData.error || "Unknown error"
+						}`
+					);
+					continue;
+				}
+
+				const result = await response.json();
+				// Construct the media object. Adjust filePath based on your API's response.
+				uploadedFileData.push({
+					mediatype: file.type,
+					filePath: result.file.path || result.file.filename,
+					name: file.name,
+					size: file.size,
+				});
+			} catch (err) {
+				console.error("Error uploading file:", err);
+				alert(`Error uploading file ${file.name}: ${err.message}`);
+			}
+		}
+
+		const updatedFiles = [...files, ...uploadedFileData];
 		setFiles(updatedFiles);
 		handleFileChange(updatedFiles, true);
 	};
@@ -38,15 +76,9 @@ const MediaAttachment = ({ handleFileChange }) => {
 
 	return (
 		<div>
-			{" "}
-			{/* Removed mb-4, as spacing is handled by parent */}
 			<div className="mb-3">
-				{" "}
-				{/* Consistent spacing with other sections */}
 				<label className="block text-sm font-medium text-gray-700">
 					<h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
-						{" "}
-						{/*Consistent style with Journal.jsx*/}
 						Attach Media
 						<AiOutlineInfoCircle
 							title="Upload photos, videos, or audio clips relevant to your journal (Max 100MB each, 500MB total)"
@@ -65,8 +97,6 @@ const MediaAttachment = ({ handleFileChange }) => {
 			</div>
 			{files.length > 0 && (
 				<div className="mt-4">
-					{" "}
-					{/* More spacing before the list */}
 					<h4 className="text-md font-medium text-gray-700 mb-2">
 						Uploaded Files:
 					</h4>
@@ -77,7 +107,7 @@ const MediaAttachment = ({ handleFileChange }) => {
 								className="flex items-center justify-between py-2 border-b border-gray-200 last:border-none"
 							>
 								<span className="text-sm">
-									{file.name} ({file.type}) -{" "}
+									{file.name} ({file.mediatype}) -{" "}
 									{(file.size / (1024 * 1024)).toFixed(2)} MB
 								</span>
 								<button
