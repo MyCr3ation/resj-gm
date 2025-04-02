@@ -12,6 +12,11 @@ const cookieParser = require("cookie-parser");
 const { createClient } = require("@supabase/supabase-js"); // Import Supabase
 const bcrypt = require("bcrypt"); // Import bcrypt
 const fs = require("fs");
+const {
+	S3Client,
+	PutObjectCommand,
+	DeleteObjectCommand,
+} = require("@aws-sdk/client-s3");
 
 const app = express();
 const port = process.env.PORT || 5500;
@@ -24,7 +29,11 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Enable CORS for all routes
 app.use(
 	cors({
-		origin: ["http://localhost:5173", "http://localhost:5500"], // Adjust as needed for your frontend
+		origin: [
+			"http://localhost:5173",
+			"http://localhost:5500",
+			"https://resj-gm.onrender.com",
+		], // Adjust as needed for your frontend
 		credentials: true, // Important: Allow sending cookies
 	})
 );
@@ -215,9 +224,6 @@ app.post("/api/journal", async (req, res) => {
 		// If there is media data, process each media item.
 		// Process each media item if any
 		if (media && Array.isArray(media)) {
-			// Import the S3 client and PutObjectCommand from AWS SDK v3
-			const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
-
 			// Setup S3 client using AWS SDK v3
 			const s3Client = new S3Client({
 				endpoint: "https://dkswqfkufgcfvectiaph.supabase.co/storage/v1/s3",
@@ -379,18 +385,47 @@ app.post("/api/auth", async (req, res) => {
 });
 
 // Add a simple protected route example (using middleware)
+
 const authenticateUser = async (req, res, next) => {
 	const usid = req.cookies.usid;
 
 	if (!usid) {
-		return res.status(401).json({ error: "Unauthorized: No USID" });
+		return res.status(401).json({ error: "Unauthorized: No USID cookie" });
 	}
 
-	// You could also query the 'session' table here to validate the USID against the database.
-	//  This would be important for features like forced logout or session expiry.
+	try {
+		// Validate USID and get user_uid from session table
+		const { data: sessionData, error: sessionError } = await supabase
+			.from("session")
+			.select("user_uid")
+			.eq("usid", usid)
+			.maybeSingle(); // Use maybeSingle in case session expired/doesn't exist
 
-	req.usid = usid; // Attach the usid to the request object for later use
-	next(); // Continue to the next middleware/route handler
+		if (sessionError) {
+			console.error("Error validating session:", sessionError);
+			return res.status(500).json({ error: "Session validation error" });
+		}
+
+		if (!sessionData) {
+			// Clear the invalid cookie and deny access
+			res.clearCookie("usid", {
+				httpOnly: true,
+				secure: process.env.NODE_ENV === "production",
+				sameSite: "lax",
+			});
+			return res
+				.status(401)
+				.json({ error: "Unauthorized: Invalid or expired session" });
+		}
+
+		// Attach user_uid and usid to the request object
+		req.user_uid = sessionData.user_uid;
+		req.usid = usid;
+		next(); // Continue to the next middleware/route handler
+	} catch (error) {
+		console.error("Error in authenticateUser middleware:", error);
+		return res.status(500).json({ error: "Internal server error" });
+	}
 };
 
 app.get("/api/protected", authenticateUser, (req, res) => {
@@ -554,6 +589,438 @@ app.post("/api/login", async (req, res) => {
 	}
 });
 
+// server.js (Add this endpoint)
+
+// Endpoint to get all journal entries for the authenticated user
+// server.js (Relevant Endpoint)
+
+app.get("/api/alljournal", authenticateUser, async (req, res) => {
+	try {
+		const user_uid = req.user_uid; // Get user_uid from middleware
+
+		// 1. Fetch journal entries for the user
+		const { data: journalEntriesData, error: journalError } = await supabase
+			.from("journal")
+			.select("*")
+			.eq("uid", user_uid)
+			.order("date", { ascending: false });
+
+		if (journalError) {
+			console.error("Error fetching journal entries:", journalError);
+			return res.status(500).json({ error: "Failed to fetch journal entries" });
+		}
+
+		if (!journalEntriesData || journalEntriesData.length === 0) {
+			return res.json([]); // Return empty array if no entries found
+		}
+
+		// 2. For each journal entry, fetch associated media
+		//    Promise.all ensures we wait for all media fetches to complete
+		const entriesWithMedia = await Promise.all(
+			// Map over each fetched journal entry
+			journalEntriesData.map(async (entry) => {
+				// Fetch media specifically for the current entry's ID (entry.id)
+				const { data: mediaData, error: mediaError } = await supabase
+					.from("media") // Query the 'media' table
+					.select("mediaurl, mediatype") // Select the URL and type
+					.eq("jid", entry.id); // ***** CRITICAL STEP *****
+				// Filter media where the 'jid' column
+				// matches the current journal 'entry.id'
+
+				if (mediaError) {
+					console.error(
+						`Error fetching media for journal ${entry.id}:`,
+						mediaError
+					);
+					// If media fetch fails for one entry, return the entry without media
+					// instead of failing the whole request.
+					return { ...entry, media: [] }; // Attach an empty array for 'media'
+				}
+
+				// Combine the original entry data with its fetched media data.
+				// If mediaData is null/undefined (no media found), use an empty array.
+				// The result is { ...originalEntryData, media: [ {mediaurl, mediatype}, ... ] }
+				// or { ...originalEntryData, media: [] } if no media found.
+				return { ...entry, media: mediaData || [] };
+			}) // End of .map()
+		); // End of Promise.all()
+
+		// 3. Send the final array of journal entries, each potentially containing a 'media' array
+		res.json(entriesWithMedia);
+	} catch (error) {
+		// Catch any broader errors during the process
+		console.error("Error in GET /api/alljournal:", error); // Corrected log message
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
+
+// Endpoint to get a single journal entry by ID for the authenticated user
+app.get("/api/journal/:id", authenticateUser, async (req, res) => {
+	try {
+		const user_uid = req.user_uid; // Get user_uid from middleware
+		const journalId = req.params.id; // Get journal ID from URL parameter
+
+		if (!journalId) {
+			return res.status(400).json({ error: "Journal ID is required" });
+		}
+
+		// 1. Fetch the specific journal entry, ensuring it belongs to the user
+		const { data: journalEntryData, error: journalError } = await supabase
+			.from("journal")
+			.select(
+				`
+                *,
+                reflection ( question ) 
+            `
+			) // Fetch related reflection question directly
+			.eq("id", journalId)
+			.eq("uid", user_uid) // IMPORTANT: Ensure ownership
+			.maybeSingle(); // Use maybeSingle as we expect 0 or 1 result
+
+		if (journalError) {
+			console.error("Error fetching single journal entry:", journalError);
+			return res.status(500).json({ error: "Failed to fetch journal entry" });
+		}
+
+		if (!journalEntryData) {
+			// Entry not found or doesn't belong to the user
+			return res
+				.status(404)
+				.json({ error: "Journal entry not found or access denied" });
+		}
+
+		// 2. Fetch associated media for this entry
+		const { data: mediaData, error: mediaError } = await supabase
+			.from("media")
+			.select("mediaurl, mediatype")
+			.eq("jid", journalId); // Filter by the journal ID
+
+		if (mediaError) {
+			console.error(
+				`Error fetching media for journal ${journalId}:`,
+				mediaError
+			);
+			// Decide how to handle: return entry without media or error out?
+			// Let's return the entry but log the media error.
+			journalEntryData.media = []; // Assign empty array if media fetch fails
+		} else {
+			journalEntryData.media = mediaData || []; // Assign fetched media or empty array
+		}
+
+		// 3. Restructure the data slightly to match FullJournalView expectations
+		const responseData = {
+			id: journalEntryData.id,
+			date: journalEntryData.date,
+			mood: journalEntryData.mood,
+			title: journalEntryData.title,
+			body: journalEntryData.body,
+			goal: journalEntryData.goal,
+			affirmation: journalEntryData.affirmation,
+			reflection: {
+				// Combine question and answer into one object
+				question: journalEntryData.reflection?.question || "No question found", // Handle if reflection relation is null
+				answer: journalEntryData.reflection_answer,
+			},
+			grateful: journalEntryData.grateful, // Assuming 'grateful' is a direct column
+			weather: {
+				location: journalEntryData.location,
+				temperatureC: journalEntryData.temperaturec,
+				temperatureF: journalEntryData.temperaturef,
+				condition: journalEntryData.condition,
+			},
+			quote: {
+				q: journalEntryData.quote,
+				a: journalEntryData.quote_author,
+			},
+			media: journalEntryData.media.map((m) => ({
+				// Map backend structure to frontend expectation if needed
+				type: m.mediatype?.startsWith("image/")
+					? "image"
+					: m.mediatype?.startsWith("video/")
+					? "video"
+					: m.mediatype?.startsWith("audio/")
+					? "audio"
+					: "unknown", // Determine type based on mediatype
+				url: m.mediaurl,
+				alt: `Media for journal ${journalId}`, // Add generic alt text or derive if possible
+			})),
+		};
+
+		// 4. Send the combined data
+		res.json(responseData);
+	} catch (error) {
+		console.error("Error in GET /api/journal/:id:", error);
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
+
+// --- Helper function to setup S3 Client (reuse if needed) ---
+const getS3Client = () => {
+	return new S3Client({
+		endpoint: "https://dkswqfkufgcfvectiaph.supabase.co/storage/v1/s3",
+		region: "ap-south-1", // Your region
+		credentials: {
+			accessKeyId: process.env.SUPABASE_STORAGE_ACCESS_KEY,
+			secretAccessKey: process.env.SUPABASE_STORAGE_SECRET_KEY,
+		},
+		forcePathStyle: true,
+	});
+};
+// -------------------------------------------------------------
+
+// Endpoint to UPDATE a journal entry by ID for the authenticated user
+app.put("/api/journal/:id", authenticateUser, async (req, res) => {
+	try {
+		const user_uid = req.user_uid;
+		const journalId = req.params.id;
+		// Get data from request body - VALIDATE THIS THOROUGHLY in a real app
+		const {
+			date,
+			mood,
+			title,
+			body,
+			goal,
+			affirmation,
+			reflection_answer,
+			// Note: We don't typically allow editing reflectionQuestion, weather, quote via this form
+			// Note: Media editing is complex and not included in this basic PUT
+		} = req.body;
+
+		// Basic validation example
+		if (!date || !mood || !title || !body) {
+			return res.status(400).json({ error: "Missing required fields." });
+		}
+
+		// Construct update object - only include fields being updated
+		const updateData = {
+			date,
+			mood,
+			title,
+			body,
+			goal: goal || null, // Handle optional fields
+			affirmation: affirmation || null,
+			reflection_answer: reflection_answer || null,
+			updated_at: new Date(), // Manually set updated_at timestamp
+		};
+
+		// Perform the update, ensuring ownership
+		const { data: updatedEntry, error: updateError } = await supabase
+			.from("journal")
+			.update(updateData)
+			.eq("id", journalId)
+			.eq("uid", user_uid) // CRITICAL: Ensure user owns the entry
+			.select() // Select the updated record
+			.maybeSingle(); // Expect one record or null
+
+		if (updateError) {
+			console.error("Error updating journal entry:", updateError);
+			return res.status(500).json({ error: "Failed to update journal entry" });
+		}
+
+		if (!updatedEntry) {
+			// This could happen if the ID doesn't exist OR if the user_uid doesn't match
+			return res
+				.status(404)
+				.json({ error: "Journal entry not found or access denied" });
+		}
+
+		// TODO: Add complex media update logic here if needed in the future.
+		// This would involve:
+		// 1. Getting list of existing media URLs from DB for this journalId.
+		// 2. Getting list of media URLs client wants to KEEP.
+		// 3. Getting list of NEW files client uploaded (via multer or similar).
+		// 4. Deleting media from S3/DB that are NOT in the "keep" list.
+		// 5. Uploading NEW files to S3 and adding records to DB.
+
+		// Return the updated entry (or just a success message)
+		// Fetching the full related data again might be needed if you want to return the same structure as GET /:id
+		res.json(updatedEntry); // For now, just return the directly updated fields
+	} catch (error) {
+		console.error("Error in PUT /api/journal/:id:", error);
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
+
+// Endpoint to DELETE a journal entry by ID for the authenticated user
+app.delete("/api/journal/:id", authenticateUser, async (req, res) => {
+	try {
+		const user_uid = req.user_uid;
+		const journalId = req.params.id;
+
+		// 1. Check if the journal entry exists and belongs to the user before proceeding
+		const { data: journalCheck, error: checkError } = await supabase
+			.from("journal")
+			.select("id") // Select minimal data
+			.eq("id", journalId)
+			.eq("uid", user_uid)
+			.maybeSingle();
+
+		if (checkError) {
+			console.error("Error checking journal ownership:", checkError);
+			return res.status(500).json({ error: "Database error during check" });
+		}
+
+		if (!journalCheck) {
+			return res
+				.status(404)
+				.json({ error: "Journal entry not found or access denied" });
+		}
+
+		// 2. Fetch associated media URLs
+		const { data: mediaToDelete, error: mediaFetchError } = await supabase
+			.from("media")
+			.select("mediaurl")
+			.eq("jid", journalId);
+
+		if (mediaFetchError) {
+			console.error(
+				`Error fetching media for journal ${journalId} during delete:`,
+				mediaFetchError
+			);
+			// Log error but proceed with deleting DB records if desired, or halt here
+			// return res.status(500).json({ error: "Failed to fetch media for deletion" });
+		}
+
+		// 3. Delete media files from S3 storage (if any found)
+		if (mediaToDelete && mediaToDelete.length > 0) {
+			const s3Client = getS3Client();
+			const bucketName = "media-data"; // Your bucket name
+
+			for (const mediaItem of mediaToDelete) {
+				try {
+					// Extract the object key from the URL
+					// Example URL: https://<project_ref>.supabase.co/storage/v1/object/public/media-data/journal_10/1678886400000_image.jpg
+					// Key: journal_10/1678886400000_image.jpg
+					const urlParts = new URL(mediaItem.mediaurl);
+					const key = urlParts.pathname.split(`/public/${bucketName}/`)[1]; // Adjust parsing based on your exact URL structure
+
+					if (key) {
+						const deleteCommand = new DeleteObjectCommand({
+							Bucket: bucketName,
+							Key: key,
+						});
+						await s3Client.send(deleteCommand);
+						console.log(`Deleted from S3: ${key}`);
+					} else {
+						console.warn(`Could not parse key from URL: ${mediaItem.mediaurl}`);
+					}
+				} catch (s3Error) {
+					console.error(
+						`Error deleting file ${mediaItem.mediaurl} from S3:`,
+						s3Error
+					);
+					// Log error but continue trying to delete DB records
+				}
+			}
+		}
+
+		// 4. Delete media records from the database
+		const { error: mediaDeleteError } = await supabase
+			.from("media")
+			.delete()
+			.eq("jid", journalId);
+
+		if (mediaDeleteError) {
+			console.error(
+				`Error deleting media records for journal ${journalId}:`,
+				mediaDeleteError
+			);
+			// Log error, but proceed to delete the main journal entry
+		}
+
+		// 5. Delete the journal entry itself
+		const { error: journalDeleteError } = await supabase
+			.from("journal")
+			.delete()
+			.eq("id", journalId)
+			.eq("uid", user_uid); // Redundant check due to step 1, but safe
+
+		if (journalDeleteError) {
+			console.error("Error deleting journal entry:", journalDeleteError);
+			return res.status(500).json({ error: "Failed to delete journal entry" });
+		}
+
+		// 6. Send success response
+		res.status(200).json({ message: "Journal entry deleted successfully" });
+		// Or use 204 No Content: res.status(204).send();
+	} catch (error) {
+		console.error("Error in DELETE /api/journal/:id:", error);
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
+
+app.delete("/api/journal/:id/media", authenticateUser, async (req, res) => {
+	try {
+		const user_uid = req.user_uid;
+		const journalId = req.params.id;
+		const { mediaUrl } = req.body;
+
+		if (!mediaUrl) {
+			return res.status(400).json({ error: "mediaUrl is required" });
+		}
+
+		// Verify that the journal entry belongs to the user
+		const { data: journalCheck } = await supabase
+			.from("journal")
+			.select("id")
+			.eq("id", journalId)
+			.eq("uid", user_uid)
+			.maybeSingle();
+
+		if (!journalCheck) {
+			return res
+				.status(404)
+				.json({ error: "Journal entry not found or access denied" });
+		}
+
+		// Get the media record from the database
+		const { data: mediaRecord } = await supabase
+			.from("media")
+			.select("*")
+			.eq("jid", journalId)
+			.eq("mediaurl", mediaUrl)
+			.maybeSingle();
+
+		if (!mediaRecord) {
+			return res.status(404).json({ error: "Media not found" });
+		}
+
+		// Delete the file from Supabase Storage (S3)
+		const s3Client = getS3Client();
+		const bucketName = "media-data"; // your bucket name
+		const urlParts = new URL(mediaUrl);
+		// Assumes URL pattern includes "/public/media-data/"
+		const key = urlParts.pathname.split(`/public/${bucketName}/`)[1];
+
+		if (key) {
+			const deleteCommand = new DeleteObjectCommand({
+				Bucket: bucketName,
+				Key: key,
+			});
+			await s3Client.send(deleteCommand);
+			console.log(`Deleted from S3: ${key}`);
+		} else {
+			console.warn(`Could not parse key from URL: ${mediaUrl}`);
+		}
+
+		// Delete the media record from the database
+		const { error: deleteError } = await supabase
+			.from("media")
+			.delete()
+			.eq("jid", journalId)
+			.eq("mediaurl", mediaUrl);
+
+		if (deleteError) {
+			console.error("Error deleting media record:", deleteError);
+			return res.status(500).json({ error: "Failed to delete media record" });
+		}
+
+		res.status(200).json({ message: "Media deleted successfully" });
+	} catch (error) {
+		console.error("Error deleting media:", error);
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
 app.listen(port, () => {
 	console.log(`Server is running on port ${port}`);
 });

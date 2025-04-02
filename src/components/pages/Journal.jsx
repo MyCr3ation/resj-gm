@@ -18,7 +18,6 @@ const initialJournalState = {
 	goal: "",
 	affirmation: "",
 	reflection: "",
-	quote: "",
 	reflectionQuestion: "",
 	media: [],
 	uploadedFiles: [],
@@ -48,7 +47,8 @@ const Journal = () => {
 			const fetchReflectionQuestion = async () => {
 				try {
 					const response = await fetch(
-						"http://localhost:5500/api/reflectionQuestion"
+						"https://resj-gm.onrender.com/api/reflectionQuestion" ||
+							"http://localhost:5500/api/reflectionQuestion"
 					);
 					if (!response.ok) {
 						throw new Error(`HTTP error: ${response.status}`);
@@ -145,6 +145,10 @@ const Journal = () => {
 			toast.error("Please write your journal entry.");
 			return;
 		}
+		if (!journal?.mood) {
+			toast.error("Please select your mood.");
+			return;
+		}
 
 		// Build the journal data payload.
 		const journalData = {
@@ -161,20 +165,24 @@ const Journal = () => {
 			temperaturef: journal.temperaturef || null,
 			condition: journal.condition || null,
 			location: userLocation || "Dubai",
-			quote: journal.quote ? journal.quote.q : "",
-			quote_author: journal.quote ? journal.quote.a : "",
+			quote: journal.quote,
+			quote_author: journal.quote.a,
 			media: uploadedFiles,
 		};
 
 		try {
-			const response = await fetch("http://localhost:5500/api/journal", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				credentials: "include",
-				body: JSON.stringify(journalData),
-			});
+			const response = await fetch(
+				"https://resj-gm.onrender.com/api/journal" ||
+					"http://localhost:5500/api/journal",
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					credentials: "include",
+					body: JSON.stringify(journalData),
+				}
+			);
 			if (!response.ok) {
 				throw new Error("Failed to save journal entry");
 			}

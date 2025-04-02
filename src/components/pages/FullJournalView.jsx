@@ -1,182 +1,50 @@
-import React, { useState, useEffect } from "react";
+// FullJournalView.jsx
+import React from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import toast from "react-hot-toast";
 import {
 	AiOutlineInfoCircle,
 	AiOutlineCloud,
-	AiOutlineSmile,
+	AiOutlineSmile, // Keep if used elsewhere, otherwise can remove
 	AiOutlineStar,
 	AiOutlineCheckCircle,
+	AiOutlineEdit,
+	AiOutlineDelete,
 } from "react-icons/ai";
 import { BsSun, BsFillCloudSunFill, BsChatSquareQuote } from "react-icons/bs";
 import DynamicImage from "../common/DynamicImage.jsx";
 
-const FullJournalView = () => {
-	const [isLoading, setIsLoading] = useState(true);
-	const [journalEntry, setJournalEntry] = useState(null);
-
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			// Simulate fetching data from a backend
-			const sampleData = {
-				id: 1,
-				date: "2024-07-28",
-				mood: "😊",
-				title: "A Day of Discovery and Connection",
-				body: "Today was more than just fantastic; it was truly transformative.  From the early morning walk in the park, where I felt the cool dew on the grass, to the evening's breathtaking sunset, every moment felt significant. The picnic was delightful – fresh fruit, crusty bread, and sparkling water.  Developing in React brought its own set of challenges and triumphs, pushing me to learn and grow.  Meeting new friends was the highlight;  our conversations flowed effortlessly, sparking ideas and laughter.  It's amazing how quickly you can connect with people who share your passions.  And that sunset... it painted the sky in hues of orange, pink, and purple – a perfect end to a perfect day.  I feel a deep sense of gratitude for the simple joys and the unexpected connections.",
-				goal: "Complete the UI for the new feature",
-				affirmation:
-					"I am resilient, resourceful, and ready to embrace new challenges.",
-				reflection: {
-					// Changed to an object with question and answer
-					question:
-						"What was the most impactful moment of the day, and what did it teach you?",
-					answer:
-						"The most impactful moment was the spontaneous conversation with my new friends.  It reminded me that connection is essential, and that shared experiences, even small ones, can create lasting bonds.  It also made me reflect on how important it is to be open to new experiences and people.",
-				},
-				grateful:
-					"Today, I'm incredibly grateful for the good weather, the delicious food, the inspiring company of new friends, the opportunity to learn and expand my skills, and the sheer beauty of nature.",
-				weather: {
-					location: "Mumbai",
-					temperatureC: 28,
-					temperatureF: 82.4,
-					condition: "sunny",
-				},
-				quote: {
-					q: "The best and most beautiful things in the world cannot be seen or even touched - they must be felt with the heart.",
-					a: "Helen Keller",
-				},
-				media: [
-					{ type: "image", url: "resj-logo.png", alt: "Park scene" },
-					{
-						type: "image",
-						url: "https://via.placeholder.com/600x400",
-						alt: "Placeholder 600x400",
-					},
-					{
-						type: "image",
-						url: "https://via.placeholder.com/400x400",
-						alt: "Placeholder 400x400",
-					},
-					{
-						type: "video",
-						url: "https://www.w3schools.com/html/mov_bbb.mp4",
-					},
-					{ type: "audio", url: "https://www.w3schools.com/html/horse.mp3" },
-				],
-			};
-			setJournalEntry(sampleData);
-			setIsLoading(false);
-		}, 2000); // 2 seconds delay
-
-		return () => clearTimeout(timer); // Clean up the timer
-	}, []);
-
-	const weatherIcon = (condition) => {
-		switch (condition) {
-			case "sunny":
-				return <BsSun size={24} className="text-yellow-500" />;
-			case "cloudy":
-				return <AiOutlineCloud size={24} className="text-gray-500" />;
-			case "partly-cloudy":
-				return <BsFillCloudSunFill size={24} className="text-blue-300" />;
-			default:
-				return <AiOutlineCloud size={24} className="text-gray-500" />;
-		}
-	};
-
-	const Shimmer = () => (
-		<div className="animate-shimmer">
-			<div className="bg-gray-300 h-full w-full"></div>
-		</div>
-	);
-
-	const LoadingPlaceholder = () => {
-		return (
-			<div className="min-h-screen bg-gradient-to-br from-brandGreen-100 to-brandGreen-300 p-8">
-				<div className="bg-brandGreen-50 rounded-3xl shadow-2xl overflow-hidden w-full p-6 md:p-10">
-					{/* Header */}
-					<div className="flex items-center justify-between mb-6 border-b border-brandGreen-200 pb-4">
-						<div className="w-3/4 h-10 bg-gray-300 rounded-md animate-shimmer"></div>
-						<div className="w-12 h-12 bg-gray-300 rounded-full animate-shimmer"></div>
-					</div>
-
-					{/* Date */}
-					<div className="w-1/2 h-6 bg-gray-300 rounded-md mb-8 animate-shimmer"></div>
-
-					{/* Main Journal Body */}
-					<div className="mb-8">
-						<div className="h-6 bg-gray-300 rounded-md mb-2 animate-shimmer"></div>
-						<div className="h-6 bg-gray-300 rounded-md mb-2 animate-shimmer"></div>
-						<div className="h-6 bg-gray-300 rounded-md mb-2 animate-shimmer"></div>
-						<div className="h-6 bg-gray-300 rounded-md mb-2 animate-shimmer"></div>
-						<div className="h-6 w-1/2 bg-gray-300 rounded-md animate-shimmer"></div>
-					</div>
-
-					{/* Sections (Goal, Affirmation, etc.) */}
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-						{[1, 2, 3, 4].map((index) => (
-							<div
-								key={index}
-								className="bg-brandGreen-100 p-5 rounded-xl shadow-md"
-							>
-								<div className="flex items-center mb-3">
-									<div className="w-6 h-6 bg-gray-300 rounded-full mr-2 animate-shimmer"></div>
-									<div className="w-1/2 h-6 bg-gray-300 rounded-md animate-shimmer"></div>
-								</div>
-								<div className="h-4 bg-gray-300 rounded-md mt-2 animate-shimmer"></div>
-							</div>
-						))}
-					</div>
-
-					{/* Weather and Quote (Side-by-Side) */}
-					<div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-						<div className="bg-brandGreen-100 p-5 rounded-xl shadow-md">
-							<div className="flex items-center mb-3">
-								<div className="w-6 h-6 bg-gray-300 rounded-full mr-2 animate-shimmer"></div>
-								<div className="w-1/4 h-6 bg-gray-300 rounded-md animate-shimmer"></div>
-							</div>
-							<div className="h-4 bg-gray-300 rounded-md mb-2 animate-shimmer"></div>
-							<div className="h-4 w-1/2 bg-gray-300 rounded-md animate-shimmer"></div>
-						</div>
-						<div className="bg-brandGreen-100 p-5 rounded-xl shadow-md">
-							<div className="flex items-center mb-3">
-								<div className="w-6 h-6 bg-gray-300 rounded-full mr-2 animate-shimmer"></div>
-								<div className="w-1/4 h-6 bg-gray-300 rounded-md animate-shimmer"></div>
-							</div>
-							<div className="h-4 bg-gray-300 rounded-md mb-2 animate-shimmer"></div>
-							<div className="h-4 w-1/2 bg-gray-300 rounded-md animate-shimmer"></div>
-						</div>
-					</div>
-
-					{/* Media */}
-					<div className="mt-8">
-						<h3 className="text-2xl font-semibold text-brandGreen-700 mb-4">
-							Media
-						</h3>
-						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-							{[1, 2, 3, 4, 5].map((index) => (
-								<div key={index} className="relative group">
-									<div className="w-full h-40 bg-gray-300 rounded-lg animate-shimmer"></div>
-								</div>
-							))}
-						</div>
-					</div>
-				</div>
-			</div>
-		);
-	};
-
-	if (isLoading) {
-		return <LoadingPlaceholder />;
+// --- Helper Functions ---
+const weatherIcon = (condition) => {
+	switch (condition?.toLowerCase()) {
+		case "sunny":
+		case "clear":
+			return <BsSun size={24} className="text-yellow-500" />;
+		case "cloudy":
+			return <AiOutlineCloud size={24} className="text-gray-500" />;
+		case "partly cloudy":
+		case "partly-cloudy":
+			return <BsFillCloudSunFill size={24} className="text-blue-300" />;
+		default:
+			return <AiOutlineCloud size={24} className="text-gray-500" />;
 	}
+};
+// --- End Helper Functions ---
+
+const FullJournalView = ({ journalEntry }) => {
+	const navigate = useNavigate();
+	const { journalId } = useParams();
 
 	if (!journalEntry) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-brandGreen-100 to-brandGreen-300 p-8 flex justify-center items-center">
-				<p className="text-brandGreen-700 text-xl">No journal entry found.</p>
+			<div className="p-8 text-center text-brandGreen-700">
+				Journal data is not available.
 			</div>
 		);
 	}
 
+	// --- Format Date ---
 	const formattedDate = new Date(journalEntry.date).toLocaleDateString(
 		"en-US",
 		{
@@ -184,88 +52,145 @@ const FullJournalView = () => {
 			year: "numeric",
 			month: "long",
 			day: "numeric",
+			timeZone: "UTC",
 		}
 	);
 
+	// --- Handlers for Edit and Delete ---
+	const handleEdit = () => {
+		navigate(`/journal/edit/${journalId}`);
+	};
+
+	const handleDelete = async () => {
+		if (
+			window.confirm(
+				"Are you sure you want to permanently delete this journal entry?"
+			)
+		) {
+			const toastId = toast.loading("Deleting entry...");
+			try {
+				const response = await axios.delete(
+					`${import.meta.env.VITE_API_URL}/api/journal/${journalId}`,
+					{
+						withCredentials: true,
+					}
+				);
+
+				if (response.status === 200 || response.status === 204) {
+					toast.success("Journal entry deleted successfully!", { id: toastId });
+					navigate("/journal/view");
+				} else {
+					throw new Error(response.data?.error || "Deletion failed");
+				}
+			} catch (err) {
+				console.error("Error deleting journal entry:", err);
+				toast.error(
+					`Deletion failed: ${err.response?.data?.error || err.message}`,
+					{ id: toastId }
+				);
+			}
+		}
+	};
+	// --- End Handlers ---
+
+	// Define sections data (excluding Quote for now)
+	const sections = [
+		{
+			title: "Tomorrow's Goal",
+			content: journalEntry.goal,
+			icon: AiOutlineCheckCircle,
+			tooltip: "Your short term goal you needed to achieve.",
+		},
+		{
+			title: "Today's Affirmation",
+			content: journalEntry.affirmation,
+			icon: AiOutlineStar,
+			tooltip: "Your affirmation for the day.",
+		},
+		{
+			title: "Reflection",
+			content: journalEntry.reflection, // Passed as object { question, answer }
+			icon: AiOutlineInfoCircle,
+			tooltip: "Reflect on the day.",
+		},
+	];
+
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-brandGreen-100 to-brandGreen-300 p-8">
-			<div className="bg-brandGreen-50 rounded-3xl shadow-2xl overflow-hidden w-full p-6 md:p-10">
-				{/* Header */}
-				<div className="flex items-center justify-between mb-6 border-b border-brandGreen-200 pb-4">
-					<h1 className="text-4xl font-extrabold text-brandGreen-800 flex items-center">
-						{journalEntry.title}
-					</h1>
-					<div className="text-3xl">{journalEntry.mood}</div>
-				</div>
-
-				{/* Date */}
-				<p className="text-gray-600 text-lg mb-8">{formattedDate}</p>
-
-				{/* Main Journal Body */}
-				{journalEntry.body && (
-					<div className="prose prose-brandGreen max-w-none text-brandGreen-700 leading-relaxed mb-8">
-						{journalEntry.body}
-					</div>
+		<div className="bg-brandGreen-50 rounded-3xl shadow-2xl overflow-hidden w-full p-6 md:p-10">
+			{/* Header */}
+			<div className="flex items-center justify-between mb-6 border-b border-brandGreen-200 pb-4">
+				<h1 className="text-3xl md:text-4xl font-extrabold text-brandGreen-800 flex items-center break-words mr-4">
+					{journalEntry.title || "Untitled Entry"}
+				</h1>
+				{journalEntry.mood && (
+					<div className="text-3xl flex-shrink-0">{journalEntry.mood}</div>
 				)}
+			</div>
 
-				{/* Sections (Goal, Affirmation, etc.) */}
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-					{[
-						{
-							title: "Tomorrow's Goal",
-							content: journalEntry.goal,
-							icon: AiOutlineCheckCircle,
-							tooltip: "Your short term goal you needed to achieve.",
-						},
-						{
-							title: "Today's Affirmation",
-							content: journalEntry.affirmation,
-							icon: AiOutlineStar,
-							tooltip: "What did you learn?",
-						},
-						{
-							title: "Reflection",
-							content: journalEntry.reflection, // Now an object
-							icon: AiOutlineInfoCircle,
-							tooltip: "Reflect on the day.",
-						},
-						{
-							title: "Today I am Grateful For",
-							content: journalEntry.grateful,
-							icon: AiOutlineSmile,
-							tooltip: "List things you were grateful",
-						},
-					].map((section, index) => {
-						// Special handling for Reflection
-						if (section.title === "Reflection") {
-							return (
-								<div
-									key={index}
-									className="bg-brandGreen-100 p-5 rounded-xl shadow-md"
-								>
-									<h3 className="text-xl font-semibold text-brandGreen-700 mb-3 flex items-center">
-										<section.icon
-											className="mr-2 text-brandGreen-500"
-											size={20}
-										/>
-										{section.title}
-										<AiOutlineInfoCircle
-											title={section.tooltip}
-											className="ml-2 text-brandGreen-400 cursor-pointer"
-										/>
-									</h3>
-									<p className="text-brandGreen-600 font-medium">
-										{section.content.question}
-									</p>
-									<p className="text-brandGreen-600">
-										{section.content.answer}
-									</p>
-								</div>
-							);
+			{/* Date */}
+			<p className="text-gray-600 text-lg mb-8">{formattedDate}</p>
+
+			{/* Main Journal Body */}
+			{journalEntry.body && (
+				<div
+					className="prose prose-brandGreen max-w-none text-brandGreen-700 leading-relaxed mb-8"
+					style={{ whiteSpace: "pre-wrap" }}
+				>
+					{journalEntry.body}
+				</div>
+			)}
+
+			{/* Weather Section (Placed separately before the grid) */}
+			{journalEntry.weather?.location && (
+				<div className="mb-8 bg-brandGreen-100 p-5 rounded-xl shadow-md">
+					<h3 className="text-xl font-semibold text-brandGreen-700 mb-3 flex items-center">
+						<div className="mr-2">
+							{weatherIcon(journalEntry.weather.condition)}
+						</div>
+						Weather
+					</h3>
+					<p className="text-brandGreen-600">
+						Location: {journalEntry.weather.location}
+					</p>
+					{(journalEntry.weather.temperatureC !== null ||
+						journalEntry.weather.temperatureF !== null) && (
+						<p className="text-brandGreen-600">
+							Temperature:{" "}
+							{journalEntry.weather.temperatureC !== null
+								? `${journalEntry.weather.temperatureC}°C`
+								: ""}
+							{journalEntry.weather.temperatureC !== null &&
+							journalEntry.weather.temperatureF !== null
+								? " / "
+								: ""}
+							{journalEntry.weather.temperatureF !== null
+								? `${journalEntry.weather.temperatureF}°F`
+								: ""}
+						</p>
+					)}
+					{journalEntry.weather.condition && (
+						<p className="text-brandGreen-600 capitalize">
+							Condition: {journalEntry.weather.condition}
+						</p>
+					)}
+				</div>
+			)}
+
+			{/* Sections Grid (Goal, Affirmation, Reflection, Quote) */}
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+				{sections.map((section, index) => {
+					// Skip rendering if content is empty (except for Reflection which checks nested)
+					if (!section.content && section.title !== "Reflection") return null;
+
+					// Special handling for Reflection object
+					if (section.title === "Reflection") {
+						if (
+							!section.content || // Check if reflection object exists
+							(!section.content.question && !section.content.answer)
+						) {
+							return null; // Skip if reflection or its contents are empty
 						}
-
-						// All other sections
-						return section.content ? (
+						return (
 							<div
 								key={index}
 								className="bg-brandGreen-100 p-5 rounded-xl shadow-md"
@@ -281,99 +206,150 @@ const FullJournalView = () => {
 										className="ml-2 text-brandGreen-400 cursor-pointer"
 									/>
 								</h3>
-								<p className="text-brandGreen-600">{section.content}</p>
+								{section.content.question &&
+									section.content.question !== "No question found" && (
+										<p className="text-brandGreen-600 font-medium italic mb-1">
+											"{section.content.question}"
+										</p>
+									)}
+								{section.content.answer && (
+									<p
+										className="text-brandGreen-600"
+										style={{ whiteSpace: "pre-wrap" }}
+									>
+										{section.content.answer}
+									</p>
+								)}
 							</div>
-						) : null;
-					})}
-				</div>
+						);
+					}
 
-				{/* Weather and Quote (Side-by-Side) */}
-				<div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-					{/* Weather */}
-					{journalEntry.weather && (
-						<div className="bg-brandGreen-100 p-5 rounded-xl shadow-md">
+					// Standard rendering for other sections
+					return (
+						<div
+							key={index}
+							className="bg-brandGreen-100 p-5 rounded-xl shadow-md"
+						>
 							<h3 className="text-xl font-semibold text-brandGreen-700 mb-3 flex items-center">
-								<div className="mr-2">
-									{weatherIcon(journalEntry.weather.condition)}
-								</div>
-								Weather
+								<section.icon className="mr-2 text-brandGreen-500" size={20} />
+								{section.title}
+								<AiOutlineInfoCircle
+									title={section.tooltip}
+									className="ml-2 text-brandGreen-400 cursor-pointer"
+								/>
 							</h3>
-							<p className="text-brandGreen-600">
-								Location: {journalEntry.weather.location}
-							</p>
-							<p className="text-brandGreen-600">
-								Temperature: {journalEntry.weather.temperatureC}°C /{" "}
-								{journalEntry.weather.temperatureF}°F
+							<p
+								className="text-brandGreen-600"
+								style={{ whiteSpace: "pre-wrap" }}
+							>
+								{section.content}
 							</p>
 						</div>
-					)}
+					);
+				})}
 
-					{/* Quote */}
-					{journalEntry.quote && (
-						<div className="bg-brandGreen-100 p-5 rounded-xl shadow-md">
-							<div>
-								<h3 className="text-xl font-semibold text-brandGreen-700 mb-3 flex items-center">
-									<BsChatSquareQuote
-										className="mr-2 text-brandGreen-500"
-										size={20}
-									/>
-									Quote
-								</h3>
-								<blockquote className="italic text-brandGreen-600">
-									"{journalEntry.quote.q}" - {journalEntry.quote.a}
-								</blockquote>
-							</div>
-						</div>
-					)}
-				</div>
-
-				{/* Media */}
-				{journalEntry.media && journalEntry.media.length > 0 && (
-					<div className="mt-8">
-						<h3 className="text-2xl font-semibold text-brandGreen-700 mb-4">
-							Media
-						</h3>
-						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-							{journalEntry.media.map((item, index) => {
-								if (item.type === "image") {
-									return (
-										<div key={index} className="relative group">
-											<DynamicImage
-												src={item.url}
-												alt={item.alt || `Media item ${index + 1}`}
-												className="rounded-lg transition-transform duration-300 transform group-hover:scale-105"
-											/>
-											<div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
-												<p className="text-white text-center px-4">
-													{item.alt}
-												</p>
-											</div>
-										</div>
-									);
-								} else if (item.type === "video") {
-									return (
-										<div key={index} className="relative">
-											<video controls className="w-full h-auto rounded-lg">
-												<source src={item.url} type="video/mp4" />
-												Your browser does not support the video tag.
-											</video>
-										</div>
-									);
-								} else if (item.type === "audio") {
-									return (
-										<div key={index} className="bg-gray-100 p-4 rounded-lg">
-											<audio controls className="w-full">
-												<source src={item.url} type="audio/mpeg" />
-												Your browser does not support the audio element.
-											</audio>
-										</div>
-									);
-								}
-								return null;
-							})}
+				{/* Quote Section - Rendered within the same grid */}
+				{journalEntry.quote?.q && (
+					<div className="bg-brandGreen-100 p-5 rounded-xl shadow-md">
+						<div>
+							<h3 className="text-xl font-semibold text-brandGreen-700 mb-3 flex items-center">
+								<BsChatSquareQuote
+									className="mr-2 text-brandGreen-500"
+									size={20}
+								/>
+								Quote
+							</h3>
+							<blockquote className="italic text-brandGreen-600">
+								"{journalEntry.quote.q}"
+								{journalEntry.quote.a && (
+									<span className="not-italic block text-right mt-1">
+										- {journalEntry.quote.a}
+									</span>
+								)}
+							</blockquote>
 						</div>
 					</div>
 				)}
+			</div>
+
+			{/* Media Section */}
+			{journalEntry.media && journalEntry.media.length > 0 && (
+				<div className="mt-8">
+					<h3 className="text-2xl font-semibold text-brandGreen-700 mb-4">
+						Media
+					</h3>
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+						{journalEntry.media.map((item, index) => {
+							if (item.type === "image") {
+								return (
+									<div
+										key={index}
+										className="relative group aspect-w-1 aspect-h-1"
+									>
+										<DynamicImage
+											src={item.url}
+											alt={item.alt || `Journal media ${index + 1}`}
+											className="rounded-lg object-cover w-full h-full transition-transform duration-300 transform group-hover:scale-105"
+										/>
+										{item.alt && (
+											<div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg">
+												<p className="text-white text-center px-4 text-sm">
+													{item.alt}
+												</p>
+											</div>
+										)}
+									</div>
+								);
+							} else if (item.type === "video") {
+								return (
+									<div
+										key={index}
+										className="relative sm:col-span-2 lg:col-span-1"
+									>
+										<video
+											controls
+											className="w-full h-auto rounded-lg shadow-md"
+										>
+											<source src={item.url} type="video/mp4" />
+											Your browser does not support the video tag.
+										</video>
+									</div>
+								);
+							} else if (item.type === "audio") {
+								return (
+									<div
+										key={index}
+										className="bg-brandGreen-100 p-4 rounded-lg shadow-md"
+									>
+										<audio controls className="w-full">
+											<source src={item.url} type="audio/mpeg" />
+											Your browser does not support the audio element.
+										</audio>
+									</div>
+								);
+							}
+							return null;
+						})}
+					</div>
+				</div>
+			)}
+
+			{/* Edit and Delete Buttons */}
+			<div className="mt-8 pt-6 border-t border-brandGreen-200 flex justify-end space-x-4">
+				<button
+					onClick={handleEdit}
+					className="inline-flex items-center px-4 py-2 border border-brandGreen-500 text-sm font-medium rounded-md text-brandGreen-700 bg-white hover:bg-brandGreen-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brandGreen-500 transition duration-150 ease-in-out"
+				>
+					<AiOutlineEdit className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+					Edit
+				</button>
+				<button
+					onClick={handleDelete}
+					className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out"
+				>
+					<AiOutlineDelete className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
+					Delete
+				</button>
 			</div>
 		</div>
 	);

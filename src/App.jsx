@@ -14,7 +14,8 @@ import Journal from "./components/pages/Journal";
 import Logo from "../src/resj-logo-color.svg";
 import { FaAngleDown, FaBars, FaTimes, FaSignOutAlt } from "react-icons/fa"; // Import FaSignOutAlt
 import ViewJournal from "./components/pages/ViewJournal";
-import FullJournalView from "./components/pages/FullJournalView";
+import FullJournalView from "./components/journal/FullJournalViewContainer";
+import EditJournal from "./components/pages/EditJournal";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast"; // Import toast
@@ -32,8 +33,8 @@ function App() {
 	const handleLogout = async () => {
 		try {
 			const response = await axios.post(
-				"http://localhost:5500/api/logout",
-				{},
+				"https://resj-gm.onrender.com/api/logout" ||
+					"http://localhost:5500/api/logout",
 				{
 					withCredentials: true,
 				}
@@ -57,7 +58,8 @@ function App() {
 			setLoadingAuth(true);
 			try {
 				const response = await axios.get(
-					"http://localhost:5500/api/protected",
+					"https://resj-gm.onrender.com/api/protected" ||
+						"http://localhost:5500/api/protected",
 					{
 						withCredentials: true,
 					}
@@ -248,12 +250,22 @@ function App() {
 								}
 							/>
 							<Route
-								path="/journal/view/:id"
+								path="/journal/view/:journalId"
 								element={
 									isAuthenticated ? (
 										<FullJournalView />
 									) : (
 										<Navigate to="/signup" />
+									)
+								}
+							/>
+							<Route
+								path="/journal/edit/:journalId"
+								element={
+									isAuthenticated ? (
+										<EditJournal />
+									) : (
+										<Navigate to="/signup" replace />
 									)
 								}
 							/>
