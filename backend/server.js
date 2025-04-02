@@ -33,6 +33,7 @@ app.use(
 			"http://localhost:5173",
 			"http://localhost:5500",
 			"https://resj-gm-1.onrender.com",
+			"https://resj.vercel.app",
 		], // Adjust as needed for your frontend
 		credentials: true, // Important: Allow sending cookies
 	})
