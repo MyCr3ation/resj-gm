@@ -190,17 +190,13 @@ const Education = () => {
 			</div>
 
 			<div className="mt-2">
-				{/* <Editor
-					value={text}
-					onChange={setText}
-					editedIndex={editedIndex}
-					state={newEducation.description}
-					setState={(value) =>
+				<Editor
+					value={newEducation.description}
+					onChange={(value) =>
 						setNewEducation({ ...newEducation, description: value })
 					}
-					label={t("Description")}
-				/> */}
-				<Editor value={text} onChange={setText} label="Description" />
+					label="Description"
+				/>
 			</div>
 
 			<Button

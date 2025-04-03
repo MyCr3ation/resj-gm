@@ -9,9 +9,13 @@ import QuoteWidget from "../journal/Quote.jsx";
 import MoodSelector from "../journal/MoodSelector.jsx";
 import SectionTitle from "../common/SectionTitle.jsx";
 
+// --- Constants ---
+const TODAY_DATE = new Date().toISOString().split("T")[0]; // Calculate today's date once
+
 // --- Main Journal Component ---
 const initialJournalState = {
-	date: new Date().toISOString().split("T")[0],
+	// Use the constant for the initial default date
+	date: TODAY_DATE,
 	mood: "",
 	heading: "",
 	body: "",
@@ -19,30 +23,55 @@ const initialJournalState = {
 	affirmation: "",
 	reflection: "",
 	reflectionQuestion: "",
-	media: [],
-	uploadedFiles: [],
+	media: [], // Assuming this might be part of the store structure, though not directly used here for files
+	// uploadedFiles: [], // Local state handles this now
+	rid: null, // Add rid for potential use in reflection question logic
+	// Weather/Quote related fields should probably be added *after* fetching, not part of initial state
 };
 
 const Journal = () => {
 	const journal = useStore((state) => state.store.journal);
 	const setStore = useStore((state) => state.setStore);
 	const [uploadedFiles, setUploadedFiles] = useState([]);
-	const [filesChanged, setFilesChanged] = useState(false);
+	// Removed filesChanged state as it wasn't used in the submit logic provided
 	const [userLocation, setUserLocation] = useState(null);
-	// New state to force remounting of MediaAttachment component
 	const [mediaResetKey, setMediaResetKey] = useState(0);
 
-	// Load draft on mount
+	// Load draft on mount or ensure initial state has today's date
 	useEffect(() => {
 		const savedDraft = Cookies.get("journalDraft");
+		let draftData = null;
 		if (savedDraft) {
-			const draftData = JSON.parse(savedDraft);
-			setStore("journal", draftData);
+			try {
+				draftData = JSON.parse(savedDraft);
+			} catch (error) {
+				console.error("Error parsing journal draft:", error);
+				Cookies.remove("journalDraft"); // Remove corrupted draft
+			}
 		}
-	}, []);
 
-	// Fetch reflection question if not already set
+		// Merge initial state with draft, ensuring date is always set
+		const initialStateWithDefaults = {
+			...initialJournalState, // Start with base defaults
+			...(draftData || {}), // Spread draft data if it exists
+			date: draftData?.date || TODAY_DATE, // Prioritize draft date, fallback to TODAY
+		};
+
+		// Only update store if it's different or initially null/undefined
+		// This check might be overkill depending on Zustand's behavior, but can prevent unnecessary renders
+		// A simpler approach is often just `setStore('journal', initialStateWithDefaults);`
+		if (JSON.stringify(journal) !== JSON.stringify(initialStateWithDefaults)) {
+			setStore("journal", initialStateWithDefaults);
+		}
+
+		// Clean up potential old file state if loading from draft (though files aren't saved in draft)
+		setUploadedFiles([]);
+		setMediaResetKey((prev) => prev + 1); // Reset media component on initial load too
+	}, [setStore]); // Only run once on mount
+
+	// Fetch reflection question if not already set in the loaded journal state
 	useEffect(() => {
+		// Check specifically if reflectionQuestion is missing in the *current* journal state
 		if (!journal?.reflectionQuestion) {
 			const fetchReflectionQuestion = async () => {
 				try {
@@ -53,32 +82,48 @@ const Journal = () => {
 						throw new Error(`HTTP error: ${response.status}`);
 					}
 					const data = await response.json();
+					// Update only the necessary fields, preserving the rest of the journal state
 					setStore("journal.reflectionQuestion", data.question);
 					setStore("journal.rid", data.rid);
+
+					// Update the cookie immediately after fetching
+					// Be careful here: get the *latest* state *before* updating the cookie
+					const currentJournalState = useStore.getState().store.journal;
 					Cookies.set(
 						"journalDraft",
-						JSON.stringify({ ...journal, reflectionQuestion: data.question }),
+						JSON.stringify({
+							...currentJournalState, // Use latest state from store
+							reflectionQuestion: data.question,
+							rid: data.rid,
+						}),
 						{ expires: 1 }
 					);
 				} catch (error) {
 					console.error("Error fetching reflection question:", error);
-					setStore(
-						"journal.reflectionQuestion",
-						"What was the most impactful moment of your day?"
-					);
+					// Only set default question if fetch fails *and* it's still missing
+					if (!useStore.getState().store.journal?.reflectionQuestion) {
+						setStore(
+							"journal.reflectionQuestion",
+							"What was the most impactful moment of your day?"
+						);
+					}
 				}
 			};
 			fetchReflectionQuestion();
 		}
-	}, [journal?.reflectionQuestion, setStore]);
+	}, [journal?.reflectionQuestion, setStore]); // Re-run if reflectionQuestion changes (e.g., gets cleared)
 
-	// Write journal changes to cookie
+	// Write journal changes to cookie (debounced version could be better for performance)
 	useEffect(() => {
-		Cookies.set("journalDraft", JSON.stringify(journal), { expires: 1 });
+		// Avoid saving if journal state hasn't been initialized yet
+		if (journal && Object.keys(journal).length > 0) {
+			Cookies.set("journalDraft", JSON.stringify(journal), { expires: 1 });
+		}
 	}, [journal]);
 
 	// Get user location
 	useEffect(() => {
+		// ... (location fetching logic remains the same)
 		const getLocation = async () => {
 			if (navigator.geolocation) {
 				navigator.geolocation.getCurrentPosition(
@@ -100,42 +145,41 @@ const Journal = () => {
 							setUserLocation(locationString);
 						} catch (error) {
 							console.error("Error getting location:", error);
-							toast.error(
-								"Could not retrieve location. Weather will use default."
-							);
-							setUserLocation("Dubai");
+							// Don't toast error here if defaulting is acceptable
+							// toast.error("Could not retrieve location. Weather will use default.");
+							setUserLocation("Dubai"); // Default location
 						}
 					},
 					(error) => {
 						console.error("Geolocation error:", error);
-						toast.error(
-							"Geolocation is not supported or permission denied. Weather will use default location."
-						);
-						setUserLocation("Dubai");
+						// toast.error("Geolocation is not supported or permission denied. Weather will use default location.");
+						setUserLocation("Dubai"); // Default location
 					}
 				);
 			} else {
-				toast.error("Geolocation is not supported by your browser.");
-				setUserLocation("Dubai");
+				// toast.error("Geolocation is not supported by your browser.");
+				setUserLocation("Dubai"); // Default location
 			}
 		};
 
 		getLocation();
-	}, []);
+	}, []); // Run only once on mount
 
-	const today = new Date().toISOString().split("T")[0];
-
-	const handleFileChange = (files, changed) => {
+	const handleFileChange = (files) => {
+		// Only need files, not 'changed' state apparently
 		setUploadedFiles(files);
-		setFilesChanged(changed);
 		console.log("files in parent", files);
 	};
 
 	const handleSubmit = async () => {
-		if (!journal?.date) {
-			toast.error("Please select a date.");
+		// Ensure date is valid before submission (though previous logic should prevent this)
+		const dateToSubmit = journal?.date || TODAY_DATE;
+		if (!dateToSubmit) {
+			// Should theoretically never happen now
+			toast.error("Date is missing. Please select or refresh.");
 			return;
 		}
+
 		if (!journal?.heading) {
 			toast.error("Please enter a journal title.");
 			return;
@@ -151,55 +195,92 @@ const Journal = () => {
 
 		// Build the journal data payload.
 		const journalData = {
-			rid: journal.rid,
-			date: journal.date,
+			rid: journal.rid, // Make sure rid is populated from reflection fetch
+			date: dateToSubmit, // Use the validated/defaulted date
 			mood: journal.mood,
 			title: journal.heading,
 			body: journal.body,
 			goal: journal.goal,
 			affirmation: journal.affirmation,
 			reflection_answer: journal.reflection,
-			reflectionQuestion: journal.reflectionQuestion,
+			reflectionQuestion: journal.reflectionQuestion, // Ensure this is populated
 			temperaturec: journal.temperaturec || null,
 			temperaturef: journal.temperaturef || null,
 			condition: journal.condition || null,
-			location: userLocation || "Dubai",
-			quote: journal.quote,
-			quote_author: journal.quote.a,
-			media: uploadedFiles,
+			location: userLocation || "Dubai", // Default location if not fetched
+			quote: journal.quote?.q, // Access quote text safely
+			quote_author: journal.quote?.a, // Access quote author safely
+			media: uploadedFiles.map((file) => ({
+				// Assuming backend expects specific structure for media
+				// Adjust this mapping based on what your backend needs (e.g., file name, type, data URL?)
+				// This example assumes you just need the file objects themselves, which is unlikely for JSON API.
+				// You might need to upload files separately and send URLs/IDs instead.
+				// FOR NOW: Sending minimal info, likely needs adjustment.
+				name: file.name,
+				type: file.type,
+				size: file.size,
+				// If you need to send file *content*, you'd typically use FormData, not JSON.
+				// Or convert to base64 (not recommended for large files).
+			})),
 		};
 
+		console.log("Submitting Journal Data:", journalData); // Log data before sending
+
 		try {
+			// **************************************************************
+			// IMPORTANT: Sending files directly within JSON is usually not possible.
+			// You typically need to use FormData for the request or upload files
+			// separately and send back identifiers (like URLs or IDs).
+			// The current `media: uploadedFiles` part will likely FAIL or
+			// not work as intended with a standard JSON backend.
+			// **************************************************************
+
+			// Example using FormData (requires backend changes to handle multipart/form-data)
+			const formData = new FormData();
+			Object.keys(journalData).forEach((key) => {
+				if (key !== "media") {
+					// Append non-file data; handle null/undefined appropriately
+					formData.append(key, journalData[key] ?? "");
+				}
+			});
+			uploadedFiles.forEach((file, index) => {
+				formData.append("media", file, file.name); // Key 'media' for each file
+			});
+
 			const response = await fetch("http://localhost:5500/api/journal", {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				// Remove 'Content-Type' header when using FormData; browser sets it correctly
+				// headers: {
+				// 	'Content-Type': 'application/json', // REMOVE THIS FOR FORMDATA
+				// },
 				credentials: "include",
-				body: JSON.stringify(journalData),
+				body: formData, // Use formData instead of JSON.stringify(journalData)
 			});
+
 			if (!response.ok) {
-				throw new Error("Failed to save journal entry");
+				const errorBody = await response.text(); // Get more error details
+				throw new Error(
+					`Failed to save journal entry: ${response.status} ${errorBody}`
+				);
 			}
 			const result = await response.json();
 			console.log("Journal entry saved:", result);
 			toast.success("Journal entry saved!");
 
-			// Clear the global journal state, local file state, and remove the cookie.
-			setStore("journal", { ...initialJournalState });
-			setUploadedFiles([]); // Clear the uploadedFiles state
-			Cookies.remove("journalDraft");
-
-			// Force remount of the MediaAttachment component by updating its key.
-			setMediaResetKey((prev) => prev + 1);
+			// Reset state after successful submission
+			setStore("journal", { ...initialJournalState, date: TODAY_DATE }); // Reset store to initial state with today's date
+			setUploadedFiles([]); // Clear the local uploadedFiles state
+			Cookies.remove("journalDraft"); // Remove the saved draft cookie
+			setMediaResetKey((prev) => prev + 1); // Force remount of MediaAttachment
 		} catch (error) {
 			console.error("Error saving journal entry:", error);
-			toast.error("Failed to save journal entry");
+			toast.error(`Failed to save journal entry: ${error.message}`);
 		}
 	};
 
 	return (
 		<div className="bg-gradient-to-br from-brandGreen-50 to-brandGreen-100 rounded-xl shadow-lg border border-gray-200 p-8">
+			{/* ... Title ... */}
 			<h2 className="text-2xl font-bold mb-6 text-brandGreen-500 border-b pb-3 text-center">
 				My Journal
 			</h2>
@@ -213,13 +294,16 @@ const Journal = () => {
 							<Input
 								name="date"
 								type="date"
-								state={journal?.date || today}
-								setState={(val) => setStore("journal.date", val)}
+								// Ensure state always has a value, fallback to TODAY_DATE if somehow null/undefined
+								state={journal?.date || TODAY_DATE}
+								// When input changes, set store value; if cleared, default to TODAY_DATE
+								setState={(val) => setStore("journal.date", val || TODAY_DATE)}
 								placeholder="Select date"
 								className="border-2 border-brandGreen-100 focus:border-brandGreen-300"
 							/>
 						</div>
 						<div>
+							{/* ... Mood Selector ... */}
 							<SectionTitle>Today's Mood</SectionTitle>
 							<MoodSelector
 								selectedMood={journal?.mood}
@@ -228,13 +312,14 @@ const Journal = () => {
 							/>
 						</div>
 					</div>
-
+					{/* Widgets */}
 					<WeatherWidget userLocation={userLocation} />
 					<QuoteWidget />
 				</div>
 
 				{/* Main column - Journal content */}
 				<div className="md:col-span-2 space-y-6">
+					{/* ... Journal Title Input ... */}
 					<div className="bg-white rounded-lg shadow p-5 border border-gray-100 transition-all hover:shadow-md">
 						<SectionTitle tooltip="A short description about your day">
 							Journal Title
@@ -247,7 +332,7 @@ const Journal = () => {
 							className="text-lg border-b-2 border-brandGreen-100 focus:border-brandGreen-300"
 						/>
 					</div>
-
+					{/* ... Journal Body Textarea ... */}
 					<div className="bg-white rounded-lg shadow p-5 border border-gray-100 transition-all hover:shadow-md">
 						<SectionTitle tooltip="Write what happened during your day">
 							Today's Story
@@ -261,7 +346,7 @@ const Journal = () => {
 							placeholder="Write your journal entry here..."
 						/>
 					</div>
-
+					{/* ... Goal Input ... */}
 					<div className="bg-white rounded-lg shadow p-5 border border-gray-100 transition-all hover:shadow-md">
 						<SectionTitle tooltip="Optional: Set a short term or next day goal">
 							Tomorrow's Goal
@@ -274,7 +359,7 @@ const Journal = () => {
 							className="border-b-2 border-brandGreen-100 focus:border-brandGreen-300"
 						/>
 					</div>
-
+					{/* ... Personal Growth Section ... */}
 					<div className="bg-white rounded-lg shadow p-5 border border-gray-100 transition-all hover:shadow-md">
 						<h3 className="text-lg font-medium text-gray-800 mb-3 text-center md:text-left">
 							Personal Growth
@@ -311,15 +396,18 @@ const Journal = () => {
 							/>
 						</div>
 					</div>
-
+					{/* ... Media Attachment ... */}
 					<div className="bg-white rounded-lg shadow p-5 border border-gray-100 transition-all hover:shadow-md">
 						<MediaAttachment
 							key={mediaResetKey} // key prop forces remount on reset
 							handleFileChange={handleFileChange}
+							// Pass initial files (empty array after reset/load)
+							initialFiles={[]}
 						/>
 					</div>
 				</div>
 			</div>
+			{/* ... Submit Button ... */}
 			<div className="mt-6 flex justify-end">
 				<button
 					type="button"

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import ImageUpload from "../../components/shared/ImageUpload";
 import Input from "../../components/common/Input";
 import useStore from "../../store/store.jsx";
@@ -7,9 +7,6 @@ import Editor from "../../components/shared/Editor";
 
 const Personal = () => {
 	const { store, setStore } = useStore();
-	const [text, setText] = useState("");
-
-	// No longer using translations
 
 	return (
 		<div className="w-full max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-200">
@@ -69,38 +66,6 @@ const Personal = () => {
 					label="City"
 				/>
 			</div>
-			<div className="mt-2">
-				{/* <Editor
-					state={store.summary}
-					setState={(value) => setStore("summary", value)}
-					name={"summary"}
-					label="About"
-				/> */}
-				<Editor
-					value={text}
-					onChange={setText}
-					label="About"
-					placeholder="Summary"
-				/>
-			</div>
-			{/* <div className="flex justify-between mt-6">
-				<button
-					className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-					onClick={() =>
-						document.querySelector('button[data-section="home"]').click()
-					}
-				>
-					Home
-				</button>
-				<button
-					className="px-4 py-2 bg-blue-600 text-black rounded hover:bg-blue-700"
-					onClick={() =>
-						document.querySelector('button[data-section="social"]').click()
-					}
-				>
-					Next
-				</button>
-			</div> */}
 		</div>
 	);
 };

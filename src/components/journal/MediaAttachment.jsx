@@ -7,20 +7,20 @@ const MediaAttachment = ({ handleFileChange }) => {
 	const handleCombinedFileChange = async (event) => {
 		const newFiles = Array.from(event.target.files);
 
-		// Check total size against 500MB limit
+		// Check total size against 100MB limit
 		let totalSize = newFiles.reduce((sum, file) => sum + file.size, 0);
 		for (let existingFile of files) {
 			totalSize += existingFile.size;
 		}
-		if (totalSize > 500 * 1024 * 1024) {
-			alert("Total file size exceeds the limit (500MB).");
+		if (totalSize > 100 * 1024 * 1024) {
+			alert("Total file size exceeds the limit (100MB).");
 			return;
 		}
 
 		// Check each file's size (max 100MB)
 		for (const file of newFiles) {
-			if (file.size > 100 * 1024 * 1024) {
-				alert(`File "${file.name}" is too large! Maximum size is 100MB.`);
+			if (file.size > 20 * 1024 * 1024) {
+				alert(`File "${file.name}" is too large! Maximum size is 20MB.`);
 				return;
 			}
 		}
@@ -81,7 +81,7 @@ const MediaAttachment = ({ handleFileChange }) => {
 					<h3 className="text-lg font-medium text-gray-800 mb-3 flex items-center">
 						Attach Media
 						<AiOutlineInfoCircle
-							title="Upload photos, videos, or audio clips relevant to your journal (Max 100MB each, 500MB total)"
+							title="Upload photos, videos, or audio clips relevant to your journal (Max 20MB each, 100MB total)"
 							className="inline ml-2 cursor-pointer text-brandGreen-400"
 						/>
 					</h3>

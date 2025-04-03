@@ -134,7 +134,13 @@ const Certificates = () => {
 					/>
 				</div>
 				<div className="mt-2">
-					<Editor value={text} onChange={setText} label="Description" />
+					<Editor
+						value={newCertificate.description}
+						onChange={(value) =>
+							setNewCertificate({ ...newCertificate, description: value })
+						}
+						label="Description"
+					/>
 				</div>
 				<Button
 					onClick={() =>

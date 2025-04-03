@@ -28,10 +28,10 @@ export const azMonths = [
 //* toLocaleDateString does not support the Azerbaijani language, I should have written like this
 
 export const LANGUAGE_OPTIONS = [
-	"Elementary",
-	"Limited",
-	"Pro",
-	"FullPro",
+	"Beginner",
+	"Intermediate",
+	"Proficient",
+	"Expert",
 	"Native",
 ];
 

@@ -1,96 +1,112 @@
-import React, { useState, useEffect, useRef } from "react";
-import Button from "@/components/common/Button";
+// Menu.jsx
+import React from "react";
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
+import Button from "@/components/common/Button"; // Use the redesigned button
 import { cn } from "@/utils/helpers";
 
+const DropdownMenu = DropdownMenuPrimitive.Root;
+const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
+const DropdownMenuPortal = DropdownMenuPrimitive.Portal;
+
+// Styled Content Component
+const DropdownMenuContent = React.forwardRef(
+	({ className, sideOffset = 4, ...props }, ref) => (
+		<DropdownMenuPrimitive.Portal>
+			<DropdownMenuPrimitive.Content
+				ref={ref}
+				sideOffset={sideOffset}
+				className={cn(
+					// Base styles for the dropdown panel
+					"z-50 min-w-[14rem] overflow-hidden rounded-md border border-zinc-700 bg-zinc-800 p-1 text-zinc-100 shadow-md",
+					// Animation (optional, requires tailwindcss-animate)
+					"data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+					"data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
+					"data-[side=bottom]:slide-in-from-top-2",
+					"data-[side=left]:slide-in-from-right-2",
+					"data-[side=right]:slide-in-from-left-2",
+					"data-[side=top]:slide-in-from-bottom-2",
+					className
+				)}
+				{...props}
+			/>
+		</DropdownMenuPrimitive.Portal>
+	)
+);
+DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName;
+
+// Styled Item Component (base for items within MainMenu, etc.)
+// This can be exported and used directly in components like MainMenu
+const DropdownMenuItem = React.forwardRef(
+	({ className, inset, ...props }, ref) => (
+		<DropdownMenuPrimitive.Item
+			ref={ref}
+			className={cn(
+				// Base styles for items
+				"relative flex cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none transition-colors",
+				// Hover/Focus styles
+				"focus:bg-zinc-700 focus:text-zinc-50 data-[highlighted]:bg-zinc-700 data-[highlighted]:text-zinc-50", // Use data-highlighted for keyboard nav
+				// Disabled styles
+				"data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+				// Inset style (for icons maybe)
+				inset && "pl-8",
+				className
+			)}
+			{...props}
+		/>
+	)
+);
+DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName;
+
+// Styled Separator
+const DropdownMenuSeparator = React.forwardRef(
+	({ className, ...props }, ref) => (
+		<DropdownMenuPrimitive.Separator
+			ref={ref}
+			className={cn("-mx-1 my-1 h-px bg-zinc-700", className)}
+			{...props}
+		/>
+	)
+);
+DropdownMenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName;
+
+// The main Menu wrapper component
 const Menu = ({
 	label,
 	icon,
 	children,
 	className,
-	className__button,
-	className__children,
+	buttonVariant = "default",
+	buttonSize = "sm",
 }) => {
-	const [dropdownOpen, setDropdownOpen] = useState(false);
-	const menuRef = useRef(null);
-	const buttonRef = useRef(null);
-	const dropdownRef = useRef(null);
-	const handleClickOutside = (event) => {
-		if (
-			menuRef.current &&
-			!menuRef.current.contains(event.target) &&
-			buttonRef.current &&
-			!buttonRef.current.contains(event.target)
-		) {
-			setDropdownOpen(false);
-		}
-	};
-
-	const adjustDropdownPosition = () => {
-		if (!dropdownRef.current) return;
-		const dropdownRect = dropdownRef.current.getBoundingClientRect();
-		const viewportWidth = window.innerWidth;
-
-		if (dropdownRect.right > viewportWidth) {
-			dropdownRef.current.style.right = "0";
-			dropdownRef.current.style.left = "auto";
-		}
-		if (dropdownRect.left < 0) {
-			dropdownRef.current.style.left = "0";
-			dropdownRef.current.style.right = "auto";
-		}
-	};
-
-	useEffect(() => {
-		if (dropdownOpen) {
-			adjustDropdownPosition();
-		}
-	}, [dropdownOpen]);
-
-	useEffect(() => {
-		document.addEventListener("mousedown", handleClickOutside);
-		return () => {
-			document.removeEventListener("mousedown", handleClickOutside);
-		};
-	}, []);
-
 	return (
-		<div
-			className={cn("relative inline-block text-left py-2", className)}
-			ref={menuRef}
-		>
-			<Button
-				id={`${label}-menu-button`}
-				className={cn(
-					`bg-zinc-800 border-2 border-zinc-700 text-black hover:bg-zinc-800/90`,
-					className__button
-				)}
-				aria-expanded={dropdownOpen}
-				aria-haspopup="true"
-				onClick={() => setDropdownOpen(!dropdownOpen)}
-				ref={buttonRef}
-			>
-				<div className="flex items-center gap-2">
-					{label} {icon}
-				</div>
-			</Button>
+		<DropdownMenu>
+			{/* The button that triggers the dropdown */}
+			<DropdownMenuTrigger asChild className={cn(className)}>
+				<Button variant={buttonVariant} size={buttonSize}>
+					{/* Content of the trigger button */}
+					{label}
+					{icon && <span className="ml-1.5">{icon}</span>}{" "}
+					{/* Add spacing for icon */}
+				</Button>
+			</DropdownMenuTrigger>
 
-			{dropdownOpen && (
-				<div
-					className={cn(
-						"absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-zinc-800 border-2 border-zinc-700 text-black ring-1 ring-black/5 focus:outline-none flex flex-col p-1 z-40",
-						className__children
-					)}
-					role="menu"
-					aria-orientation="vertical"
-					aria-labelledby="menu-button"
-					tabIndex="-1"
-					ref={dropdownRef}
-				>
-					{children}
-				</div>
-			)}
-		</div>
+			{/* The dropdown panel itself */}
+			<DropdownMenuContent className="w-56">
+				{" "}
+				{/* Set width or adjust as needed */}
+				{children}
+			</DropdownMenuContent>
+		</DropdownMenu>
 	);
 };
 
-export default Menu;
+// Export item components for use in child menus like MainMenu
+export {
+	Menu,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+	DropdownMenuContent,
+};
+// Export the root as well if needed for more complex compositions
+export default DropdownMenu;

@@ -191,7 +191,13 @@ const Project = () => {
 			</div>
 
 			<div className="mt-2">
-				<Editor value={text} onChange={setText} label="Description" />
+				<Editor
+					value={newProject.description}
+					onChange={(value) =>
+						setNewProject({ ...newProject, description: value })
+					}
+					label="Description"
+				/>
 			</div>
 			<Button
 				onClick={() =>

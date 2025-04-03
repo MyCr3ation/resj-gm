@@ -16,6 +16,7 @@ import { FaAngleDown, FaBars, FaTimes, FaSignOutAlt } from "react-icons/fa"; // 
 import ViewJournal from "./components/pages/ViewJournal";
 import FullJournalView from "./components/journal/FullJournalViewContainer";
 import EditJournal from "./components/pages/EditJournal";
+import CVPreview from "./components/layout/CVPreview";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast"; // Import toast
@@ -32,9 +33,11 @@ function App() {
 
 	const handleLogout = async () => {
 		try {
-			const response = await axios.post("http://localhost:5500/api/logout", {
-				withCredentials: true,
-			});
+			const response = await axios.post(
+				"http://localhost:5500/api/logout",
+				{},
+				{ withCredentials: true }
+			);
 
 			if (response.status === 200) {
 				setIsAuthenticated(false); // Update authentication status

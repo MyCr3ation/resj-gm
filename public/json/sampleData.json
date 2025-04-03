@@ -43,11 +43,11 @@
 	"languages": [
 		{
 			"language": "English",
-			"level": "pro"
+			"level": "Intermidiate"
 		},
 		{
 			"language": "Spanish",
-			"level": "fullPro"
+			"level": "Expert"
 		}
 	],
 	"education": [

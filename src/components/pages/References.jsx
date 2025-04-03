@@ -2,15 +2,19 @@ import { useState } from "react";
 import useStore from "../../store/store";
 import Input from "../common/Input";
 import Button from "../common/Button";
-import { MdEmail, MdPhone, MdPlayArrow } from "react-icons/md";
+import { MdEmail, MdPhone, MdPlayArrow, MdPreview } from "react-icons/md";
 // import { useTranslations } from "next-intl";
 import toast from "react-hot-toast";
 import Example from "../shared/Example";
 import { handleMoveItem } from "../../utils/helpers";
+import CVPreview from "../layout/CVPreview";
+import TemplateSelector from "../layout/TemplateSelector";
 
 const References = () => {
 	// Simple translation function replacement
 	const t = (key) => key;
+	const [showPreview, setShowPreview] = useState(false);
+	const [showTemplateSelector, setShowTemplateSelector] = useState(false);
 	const {
 		store: { references },
 		addItem,
@@ -97,9 +101,38 @@ const References = () => {
 
 	return (
 		<div className="w-full max-w-7xl mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-200">
-			<h2 className="text-center font-bold text-3xl text-brand mb-4">
-				References
-			</h2>
+			<div className="flex justify-between items-center mb-4">
+				<h2 className="font-bold text-3xl text-brand">References</h2>
+				<Button
+					onClick={() => setShowTemplateSelector(true)}
+					className="flex items-center gap-2"
+				>
+					<MdPreview className="w-5 h-5" />
+					{t("Preview CV")}
+				</Button>
+			</div>
+
+			{showTemplateSelector && (
+				<TemplateSelector
+					onClose={() => {
+						setShowTemplateSelector(false);
+						setShowPreview(true);
+					}}
+				/>
+			)}
+
+			{showPreview && (
+				<div className="fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50 flex items-center justify-center">
+					<div className="bg-white p-4 rounded-lg w-full max-w-4xl mx-4 h-full max-h-full">
+						<div className="flex justify-end mb-4">
+							<Button onClick={() => setShowPreview(false)}>
+								{t("Close")}
+							</Button>
+						</div>
+						<CVPreview />
+					</div>
+				</div>
+			)}
 
 			<>
 				{/* Inputs */}

@@ -16,11 +16,49 @@ import { TiTick } from "react-icons/ti";
 
 const BuildPage = () => {
 	const [activeSection, setActiveSection] = useState("personal");
-	const { loadSampleData } = useStore();
+	const { store, loadSampleData } = useStore();
 
 	const handleLoadSampleData = () => {
 		loadSampleData();
 		toast.success("Sample data loaded successfully!");
+	};
+
+	const isSectionComplete = (sectionId, store) => {
+		switch (sectionId) {
+			case "personal":
+				return Object.entries(store.general).every(([key, value]) => {
+					if (key === "driving") {
+						// Skip validation for driver's license
+						return true;
+					}
+					return value !== "" && value !== null;
+				});
+
+			case "social":
+				return Object.values(store.socialLinks).every(
+					(value) => value !== "" && value !== null
+				);
+			case "summary":
+				return store.summary && store.summary.trim() !== "";
+			case "experience":
+				return store.experience.length > 0;
+			case "education":
+				return store.education.length > 0;
+			case "skills":
+				return store.skills.length > 0;
+			case "projects":
+				return store.projects.length > 0;
+			case "languages":
+				return store.languages.length > 0;
+			case "certificates":
+				return store.certificates.length > 0;
+			case "interests":
+				return store.interests.length > 0;
+			case "references":
+				return store.references.length > 0;
+			default:
+				return false;
+		}
 	};
 
 	const sections = [
@@ -57,7 +95,10 @@ const BuildPage = () => {
 								}`}
 								onClick={() => setActiveSection(section.id)}
 							>
-								<TiTick className="text-brand mr-1" size={20} />
+								{isSectionComplete(section.id, store) &&
+									!activeSection.includes(section.id) && (
+										<TiTick className="text-brand mr-1" size={20} />
+									)}
 								{section.label}
 							</button>
 						))}

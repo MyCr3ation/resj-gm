@@ -174,7 +174,13 @@ const Experience = () => {
 				/>
 			</div>
 			<div className="mt-2">
-				<Editor value={text} onChange={setText} label="Description" />
+				<Editor
+					value={newExperience.description}
+					onChange={(value) =>
+						setNewExperience({ ...newExperience, description: value })
+					}
+					label="Description"
+				/>
 			</div>
 			<Button
 				onClick={() =>

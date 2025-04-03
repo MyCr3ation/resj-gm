@@ -57,7 +57,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
 	storage,
-	limits: { fileSize: 100 * 1024 * 1024 }, // limit to 100MB per file
+	limits: { fileSize: 20 * 1024 * 1024 }, // limit to 100MB per file
 });
 
 app.post("/api/upload", upload.single("file"), (req, res) => {
@@ -432,6 +432,7 @@ app.get("/api/protected", authenticateUser, (req, res) => {
 //Logout endpoint
 app.post("/api/logout", async (req, res) => {
 	const usid = req.cookies.usid;
+	console.log(usid);
 	if (usid) {
 		// Delete the session from the 'session' table
 		const { error } = await supabase.from("session").delete().eq("usid", usid);

@@ -21,8 +21,8 @@ const Summary = () => {
 					Write a brief summary of your professional background and goals
 				</label>
 				<Editor
-					value={summary}
-					onChange={handleChange}
+					value={store.summary || ""}
+					onChange={(value) => setStore("summary", value)}
 					placeholder="e.g. Dedicated web developer with 5+ years of experience in building responsive and user-friendly websites..."
 				/>
 
